@@ -1,0 +1,369 @@
+\documentclass[10pt,a4paper]{exam} % turn it into a class! 
+\usepackage[latin1]{inputenc}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{titlesec}
+\usepackage{hyperref}
+\usepackage{fancyeq}
+\usepackage{tikz}
+%\usepackage{tikz-uml}
+\usepackage{mathpartir}
+\usetikzlibrary{matrix,decorations.pathmorphing,shapes,arrows,backgrounds,positioning}
+\usepackage{graphicx,xcolor}
+\usepackage{geometry}
+\usepackage{everysel}
+\usepackage[normalem]{ulem}
+\usepackage{natbib}
+
+\tikzset{
+  treenode/.style = {align=center, inner sep=0pt, text centered,
+    font=\sffamily},
+  arn_n/.style = {treenode, circle, black, font=\sffamily\bfseries, draw=black,
+    fill=white, text width=1.5em},% arbre rouge noir, noeud noir
+  arn_r/.style = {treenode, circle, red, draw=red, 
+    text width=1.5em, very thick},% arbre rouge noir, noeud rouge
+  arn_x/.style = {treenode, rectangle, draw=black,
+    minimum width=0.5em, minimum height=0.5em}% arbre rouge noir, nil
+}
+
+\usepackage[sc]{mathpazo}
+\linespread{1.05}         % Palatino needs more leading (space between lines)
+\usepackage[T1]{fontenc}
+
+% some format settings
+% for hard-bound final submission, use:
+%\setlength{\oddsidemargin}{4.6mm}     % 30 mm left margin - 1 in
+% for soft-bound version and techreport, use instead:
+
+\setlength{\oddsidemargin}{-0.4mm}    % 25 mm left margin - 1 in
+\setlength{\evensidemargin}{\oddsidemargin}
+\setlength{\topmargin}{-5.4mm}        % 20 mm top margin - 1 in
+\setlength{\textwidth}{160mm}         % 20/25 mm right margin
+\setlength{\textheight}{237mm}        % 20 mm bottom margin
+\setlength{\headheight}{5mm}
+\setlength{\headsep}{5mm}
+\setlength{\parindent}{0mm}
+\setlength{\parskip}{\medskipamount}
+\renewcommand\baselinestretch{1.2} % thesis format (not needed for techreport)
+% don't let large figures hijack entire pages
+\renewcommand\topfraction{.9}
+\renewcommand\textfraction{.1}
+\renewcommand\floatpagefraction{.8}
+
+\pagestyle{headandfoot}
+%\pointsinrightmargin
+%\pointname{ marks}
+%\marginpointname{ marks}
+
+\marksnotpoints 
+
+\definecolor{campurple}{HTML}{862D91} 
+\definecolor{campurpledark}{HTML}{2A185C}
+
+\hypersetup{  
+  urlcolor=campurple,
+  linkcolor=campurple,
+  colorlinks=true  
+}
+
+\titlelabel{\llap{\thetitle\quad}}
+
+\newcommand {\lbrac} {\makebox[0pt]{[\kern-1ex[}}
+\newcommand {\rbrac} {\makebox[0pt]{]\kern-1ex]}}
+\newcommand{\denote}[1]{\lbrac~#1~\rbrac}
+
+
+\def\mystrut(#1,#2){\vrule height #1pt depth #2pt width 0pt} 
+
+\titlespacing*{\section}{0pt}{0pt}{0pt}
+
+
+\begin{document}
+
+\newcommand{\course}{Compiler Construction}
+\newcommand{\week}{II}
+\newcommand{\topics}{}
+
+\everymath{\color{campurpledark}}
+\everydisplay{\color{campurpledark}}
+
+%\vspace{15pt}
+
+%\begin{center}
+%\emph{Complete SECTION 1 and ONE other section.}
+%\end{center}
+
+%\begin{center}
+%\emph{Answer SECTION 1 and TWO other sections.}
+%\end{center}
+
+\marksnotpoints
+\pointsdroppedatright
+\marksnotpoints
+\marginpointname{ \points}
+
+\begin{center}
+\LARGE {\textbf{\color{campurpledark} \course} }\\[-0.2cm]
+\Large \color{campurpledark} Exercise \week\\
+\end{center}
+
+{\color{campurple}\hrule}
+
+\newcommand{\terminal}[1]{\texttt{\color{campurple}#1}}
+\newcommand{\bl}[1]{{\color{black}#1}}
+
+\vspace{0.5cm}
+
+All exercises marked with (Practical) do not need to be completed in time for the supervision, but you should still do them.
+
+\begin{questions}
+
+\section*{The Spineless Tagless G-Machine}
+\question In this fun, little exercise, we will start learning about the Spinless Tagless G-Machine\footnote{A full description of this machine may be found in \url{http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.53.3729&rep=rep1&type=pdf} which you may find useful. Only Part II is relevant to this week's exercise.} which shall accompany us for the rest of the course. It was designed as a target machine for non-strict, functional languages (primarily Haskell). Programs for the STG machine are written in the STG language which, unlike most other machine languages, is a functional language. This makes it easy to translate more high-level functional languages into STG programs. Its syntax is shown in \autoref{fig:stglang}. We will later give the STG language operational semantics which allows programs written in it to be executed directly on the STG machine. In this exercise, we will primarily be concerned with the semantics.
+\begin{figure}[h]
+\begin{displaymath}
+\begin{array}{llcll}
+\text{\bl{Program}} & \mathit{prog} & \bl{\to} & \mathit{binds} \\
+\text{\bl{Bindings}} & \mathit{binds} & \bl{\to} & \mathit{var}_1 \terminal{ = } \mathit{lf}_1\terminal{;} \ldots \terminal{;} \mathit{var}_n \terminal{ = } \mathit{lf}_n\terminal{;} & \bl{n \ge 1}\\
+\text{\bl{Lambda-forms}} & \mathit{lf} & \bl{\to} & \mathit{vars}_f~\terminal{\textbackslash} \pi~\mathit{vars}_a \terminal{ -> } \mathit{expr} \\
+\text{\bl{Update flag}} & \pi & \bl{\to} & \terminal{u} & \text{\bl{Updatable}} \\
+                        &     & \bl{\mid}     & \terminal{n} & \text{\bl{Not updatable}} \\
+\text{\bl{Expression}} & \mathit{expr} & \bl{\to}  & \terminal{let}~\mathit{binds}~\terminal{in}~\mathit{expr} & \text{\bl{Local definition}} \\
+                       &               & \bl{\mid} & \terminal{letrec}~\mathit{binds}~\terminal{in}~\mathit{expr} & \text{\bl{Local recursion}} \\
+                       &               & \bl{\mid} & \terminal{case}~\mathit{expr}~\terminal{of}~\mathit{alts} & \text{\bl{Case expression}} \\
+                       &               & \bl{\mid} & \mathit{var}~\mathit{atoms} & \text{\bl{Application}} \\
+                       &               & \bl{\mid} & \mathit{constr}~\mathit{atoms} & \text{\bl{Saturated constructor}} \\
+                       &               & \bl{\mid} & \mathit{prim}~\mathit{atoms} & \text{\bl{Saturated built-in operator}} \\
+                       &               & \bl{\mid} & \mathit{literal}  \\
+\text{\bl{Alternatives}} & \mathit{alts} & \bl{\to}  & \mathit{aalt}_1 \terminal{;} \ldots \terminal{;} \mathit{aalt}_n \terminal{;} \mathit{default} & \bl{n \ge 0} \text{ \bl{(Algebraic)}} \\
+                       &               & \bl{\mid} & \mathit{palt}_1 \terminal{;} \ldots \terminal{;} \mathit{palt}_n \terminal{;} \mathit{default} & \bl{n \ge 0} \text{ \bl{(Primitive)}} \\
+\text{\bl{Algebraic alt}} & \mathit{aalt} & \bl{\to}  & \mathit{constr}~\mathit{vars} \terminal{->} \mathit{expr} \\
+\text{\bl{Primitive alt}} & \mathit{palt} & \bl{\to}  & \mathit{literal} \terminal{->} \mathit{expr} \\
+\text{\bl{Default alt}} & \mathit{default} & \bl{\to}  & \mathit{var} \terminal{->} \mathit{expr} \\
+                        &                  & \bl{\mid} & \terminal{default ->}~\mathit{expr}\\
+\text{\bl{Literals}} & \mathit{literal} & \bl{\to}  & \terminal{0\#} \bl{\mid} \terminal{1\#} \bl{\mid} \ldots & \text{\bl{Primitive integers}}\\
+                     &                  & \bl{\mid} & \ldots            \\
+\text{\bl{Primitive ops}} & \mathit{prim} & \bl{\to}  & \terminal{+\#} \bl{\mid} \terminal{-\#} \bl{\mid} \terminal{*\#} \bl{\mid} \terminal{/\#}  & \text{\bl{Primitive integer ops}}\\     
+                     &                  & \bl{\mid} & \ldots            \\ 
+\text{\bl{Variable lists}} & \mathit{vars} & \bl{\to} & \terminal{\{}~\mathit{var}_1~\terminal{,} \ldots \terminal{,}~\mathit{var}_n~\terminal{\}} & \bl{n \ge 0}\\  
+\text{\bl{Atom lists}} & \mathit{atoms} & \bl{\to} & \terminal{\{}~\mathit{atom}_1~\terminal{,} \ldots \terminal{,}~\mathit{atom}_n~\terminal{\}} & \bl{n \ge 0}\\ 
+                       & \mathit{atom}  & \bl{\to} & \mathit{var} ~\bl{\mid}~ \mathit{literal}            \\                        
+\end{array}
+\end{displaymath}
+\caption{STG language}
+\label{fig:stglang}
+\end{figure}
+
+A program in the STG language is just a collection of global bindings (referred to as \emph{globals}) and has the general form:
+\begin{displaymath}
+ \begin{array}{lcl}
+ g_1 & = & \mathit{vs}_1~\terminal{\textbackslash}\pi~\mathit{xs}_1~\terminal{->}~\mathit{e}_1 \\
+ \ldots \\
+ g_n & = & \mathit{vs}_n~\terminal{\textbackslash}\pi~\mathit{xs}_n~\terminal{->}~\mathit{e}_n \\
+ \end{array}
+ \end{displaymath}
+Note the slightly unusual representation of lambda forms. From a denotational perspective, a lambda form $\terminal{\{} v_1, \terminal{,} \dots \terminal{,} v_n \terminal{\} \textbackslash}\pi~\terminal{\{} x_1, \terminal{,} \dots \terminal{,} x_n \terminal{\} ->}~e$ is equivalent to $\lambda x_1. \ldots.\lambda x_n.e$ in the $\lambda$-calculus. 
+
+The first list of variables and the update flag only have operational meanings. For \emph{local} (\emph{i.e.} non-global) definitions, the first list contains the names of all free variables in $e$. We will define what it means for a variable to be free in the STG language later on.
+
+The update flag indicates whether the closure corresponding to the lambda-form may updated when it reaches its normal form. We will largely ignore this.
+\begin{parts}
+\part (Practical) In a language of your choice\footnote{Your choice should be Haskell}, implement an abstract representation of the language shown in \autoref{fig:stglang}. While this will not be very useful by itself, it will form the foundation for other, practical exercises.
+\part The variables of a lambda-form are free if:
+\begin{itemize}
+\item they are mentioned in the body of the lambda abstraction, and
+\item they are not bound by a lambda or in the pattern of a case alternative, and
+\item they are not bound at the top level of program
+\end{itemize}
+The first two cases are the usual ones for free variables in the $\lambda$-calculus, but note the third one. Define a function $\mathit{fvs}$ which calculates the set of free variables in a lambda-form.
+\part (Practical) Implement $\mathit{fvs}$ in a language of your choice.
+\part Translating from a typical, functional language to the STG language involves the following transformations:
+\begin{itemize}
+\item Replace binary application by multiple application.
+\begin{displaymath}
+\begin{array}{lcl}
+(\ldots((f~e_1)~e_2)\ldots)~e_n & \Rightarrow & f~\{e_1,e_2,\ldots,e_n\}
+\end{array}
+\end{displaymath}
+
+\item Saturate all constructors and built-in operations, by $\eta$-expansion if necessary. That is
+\begin{displaymath}
+\begin{array}{lcl}
+e~\{e_1,\ldots,e_n\} & \Rightarrow & \lambda y_1, \ldots, y_m.e~\{e_1, \ldots, e_n, y_1, \ldots, y_m\}\\
+\multicolumn{3}{l}{\text{where $e$ is a built-in or constructor with arity $n+m$}}
+\end{array}
+\end{displaymath}
+\item Name every non-atomic function argument, and every $\lambda$-abstraction, by introducing a $\terminal{let}$ expression.
+\item Convert the right-hand side of each $\terminal{let}$ binding into a lambda-form, by adding free variable and update-flag information.
+\end{itemize}
+For example, consider the following definition of $\mathit{map}$ in OCaml:
+\begin{displaymath}
+\begin{array}{lcl}
+\mathbf{let}~\mathbf{rec}~\mathit{map}~f~\mathit{xs} & = & \mathbf{match}~\mathit{xs}~\mathbf{with} \\
+\multicolumn{3}{l}{\quad \begin{array}{clcl}
+\mid & \hslist{} & \to & \hslist{} \\
+\mid & y :: \mathit{ys} & \to & f~y :: \mathit{map}~f~\mathit{ys}
+\end{array}}
+\end{array}
+\end{displaymath}
+The corresponding binding in the STG language is (assuming that $\terminal{Nil}$ and $\terminal{Cons}$ are the constructors for the list type):
+\begin{displaymath}
+\begin{array}{lcl}
+\texttt{map} & \texttt{=} & \texttt{\{\} \textbackslash n \{f,xs\} ->} \\
+            &   & \quad \texttt{case xs of} \\
+            &   & \quad \begin{array}[t]{lcl}
+            \texttt{Nil \{\}} & \texttt{->} & \begin{array}{l}
+            \texttt{Nil \{\}}
+            \end{array}  \\
+            \texttt{Cons \{y,ys\}} & \texttt{->} & \begin{array}[t]{llcl}
+            \texttt{let} & \texttt{fy} & \texttt{=} & \texttt{\{f,y\} \textbackslash u \{\} -> f \{y\}} \\
+                         & \texttt{mfy} & \texttt{=} & \texttt{\{f,ys\} \textbackslash u \{\} -> map \{f,ys\}} \\
+            \multicolumn{4}{l}{\texttt{in Cons \{fy,mfy\}}}
+            \end{array}
+            \end{array}
+\end{array}
+\end{displaymath}
+Translate the following definition of the $\mathit{fib}$ function from OCaml to the STG language:
+\begin{displaymath}
+\begin{array}{lcl}
+\mathbf{let}~\mathbf{rec}~\mathit{fib}~n & = & \mathbf{match}~\mathit{n}~\mathbf{with} \\
+\multicolumn{3}{l}{\quad \begin{array}{clcl}
+	\mid & 0 & \to & 1 \\
+	\mid & 1 & \to & 1 \\
+	\mid & m & \to & \mathit{fib}(m-1) + \mathit{fib}(m-2)
+	\end{array}}
+\end{array}
+\end{displaymath}
+\part Use lambda lifting to eliminate free variables from the definitions of $\texttt{map}$ and $\texttt{fib}$ in the STG language.
+\part (Practical) Implement a compiler from the abstract representation of Slang to STG in a language of your choice.
+\end{parts}
+\question Recall that a program in the STG language is just a collection of global bindings and has the general form:
+\begin{displaymath}
+\begin{array}{lcl}
+g_1 & = & \mathit{vs}_1~\terminal{\textbackslash}\pi~\mathit{xs}_1~\terminal{->}~\mathit{e}_1 \\
+\ldots \\
+g_n & = & \mathit{vs}_n~\terminal{\textbackslash}\pi~\mathit{xs}_n~\terminal{->}~\mathit{e}_n \\
+\end{array}
+\end{displaymath}
+One of these globals must be $\terminal{main}$, which determines the value of the program. Configurations in the STG machine are 6-tuples consisting of:
+\begin{enumerate}
+\item the code, which takes one of several forms, given below
+\item the argument stack ($\mathit{as}$), which contains values, given below
+\item the return stack ($\mathit{rs}$), which contains continuations
+\item the update stack ($\mathit{us}$), which contains update frames
+\item the heap ($h$), which contains closures
+\item the global environment ($\sigma$), which gives the addresses of all closures defined at top level
+\end{enumerate}
+A value takes one of the following forms:
+\begin{displaymath}
+\begin{array}{ll}
+\mathit{Addr}~a & \text{A heap address} \\
+\mathit{Int}~n    & \text{A primitive integer value}
+\end{array}
+\end{displaymath}
+The code component of the machine configuration takes one of the following four forms:
+\begin{center}
+	\begin{tabular}{lp{11cm}}
+		$\mathit{Eval}~e~\rho$ & Evaluates the expression $e$ in the environment $\rho$ and apply its value to the arguments on the argument stack. The expression $e$ may be an arbitrarily complex STG expression. \\
+		$\mathit{Enter}~a $   & Apply the closure at address $a$ to the arguments on the argument stack \\
+		$\mathit{ReturnCon}~e~\mathit{ws}$ & Return the constructor $e$ applied to values $\mathit{ws}$ to the continuation on the return stack \\
+		$\mathit{ReturnInt}~k$ & Return the primitive integer $k$ to the continuation on the return stack
+	\end{tabular}
+\end{center}
+We define a function $\mathit{val}$ which returns the value associated with an atom:
+\begin{displaymath}
+\begin{array}{lccccl}
+\mathit{val} & \rho & \sigma & k & = & \mathit{Int}~k \\
+\mathit{val} & \rho & \sigma & v & = & \left\{ \begin{array}{ll}
+\rho~v & \text{if $v \in \mathit{dom}(\rho)$} \\
+\sigma~v & \text{otherwise}
+\end{array} \right.
+\end{array}
+\end{displaymath}
+In general, the initial configuration of the STG machine is:
+\begin{displaymath}
+\begin{array}{l}
+\langle \mathit{Eval}~(\terminal{main \{\}})~\{\},\{\},\{\},\{\}, h_{\mathit{init}}, \sigma \rangle \\
+\begin{array}{llcl}
+\mathbf{where} & \sigma & = & \left[ \begin{array}{l}
+g_1 \mapsto (\mathit{Addr}~a_1) \\
+\ldots \\
+g_n \mapsto (\mathit{Addr}~a_n)
+\end{array} \right] \\
+ & h_{\mathit{init}} & = &  \left[ \begin{array}{l}
+ a_1 \mapsto (\mathit{vs}_1~\terminal{\textbackslash}\pi_1~\mathit{xs}_1~\terminal{->}~e_1)~(\sigma~\mathit{vs}_1) \\
+ \ldots \\
+ a_n \mapsto  (\mathit{vs}_n~\terminal{\textbackslash}\pi_n~\mathit{xs}_n~\terminal{->}~e_n)~(\sigma~\mathit{vs}_n)
+ \end{array} \right]
+\end{array}
+\end{array}
+\end{displaymath}
+%\autoref{fig:operational} gives 
+The operational semantics of the STG language may be found in Chapter 5 of \url{http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.53.3729&rep=rep1&type=pdf} (pages 32-40) and an incomplete attempt by me to typeset them within a reasonable amount of time can be seen in \autoref{fig:operational}. Give the initial configuration for the following program in the STG language and then use the operational semantics to evaluate it:
+\begin{center}
+\begin{tabular}{lcl}
+\texttt{succ} & \texttt{=} & \texttt{\{\} \textbackslash n \{x\} -> \#+ \{x, \#1\}}\\
+\texttt{list} & \texttt{=} & \texttt{\{\} \textbackslash n \{\} -> Cons \{\#5, Nil\}}\\
+\texttt{map} & \texttt{=} & \texttt{\{\} \textbackslash n \{f,xs\} ->} \\
+&   & \quad \texttt{case xs of} \\
+&   & \quad \begin{tabular}[t]{lcl}
+\texttt{Nil \{\}} & \texttt{->} & \begin{tabular}{l}
+\texttt{Nil \{\}}
+\end{tabular}  \\
+\texttt{Cons \{y,ys\}} & \texttt{->} & \begin{tabular}[t]{llcl}
+\texttt{let} & \texttt{fy} & \texttt{=} & \texttt{\{f,y\} \textbackslash u \{\} -> f \{y\}} \\
+& \texttt{mfy} & \texttt{=} & \texttt{\{f,ys\} \textbackslash u \{\} -> map \{f,ys\}} \\
+\multicolumn{4}{l}{\texttt{in Cons \{fy,mfy\}}}
+\end{tabular}
+\end{tabular} \\
+\texttt{main} & \texttt{=} & \texttt{\{\} \textbackslash n \{\} -> map \{succ, list\}}
+\end{tabular}
+\end{center}
+\begin{figure}
+\begin{mathpar}
+\inferrule*[right=E-APP]
+{ 
+	\mathit{val}~\rho~\sigma~f = \mathit{Addr}~a
+}
+{
+	\langle \mathit{Eval}~(f~\mathit{xs})~\rho, \mathit{as}, \mathit{rs}, \mathit{us}, h, \sigma \rangle  
+	\Longrightarrow 
+	\langle \mathit{Enter}~a, (\mathit{val}~\rho~\sigma~\mathit{xs}) \append \mathit{as}, \mathit{rs}, \mathit{us}, h, \sigma \rangle
+} \\
+\inferrule*[right=E-ENTER-N]
+{ 
+	\mathit{length}(\mathit{as}) \ge \mathit{length}(\mathit{xs}) \\ 
+	\mathit{ws}_a \append \mathit{as}' = \mathit{as} \\ 
+	\mathit{length}(\mathit{ws}_a) = \mathit{length}(\mathit{xs})
+	\rho = [\mathit{vs} \mapsto \mathit{ws}_f, \mathit{xs} \mapsto \mathit{ws}_a]
+}
+{
+	\langle \mathit{Enter}~a, \mathit{as}, \mathit{rs}, \mathit{us}, h[a \mapsto (\mathit{vs}~\terminal{\textbackslash n}~\mathit{xs}~ \terminal{->}~e)], \sigma \rangle  
+	\Longrightarrow 
+	\langle \mathit{Eval}~e~\rho,\mathit{as}', \mathit{rs}, \mathit{us}, h, \sigma \rangle
+} %\\
+%\inferrule*[right=E-LET]
+%{  
+%	\rho' = \rho[x_1 \mapsto \mathit{Addr}~a_1, \ldots, x_n \mapsto \mathit{Addr}~a_n] \\
+%	h' = h \left[ \begin{array}{l}
+%		a_1 \mapsto (\mathit{vs}_1~\terminal{\textbackslash}\pi_1~\mathit{xs}_1~\terminal{->}~e_1)~(\rho_{\mathit{rhs}~\mathit{vs}_1}) %\\
+		%\ldots \\
+		%a_n \mapsto (\mathit{vs}_n~\terminal{\textbackslash}\pi_n~\mathit{xs}_n~\terminal{->}~e_n)~(\rho_{\mathit{rhs}~\mathit{vs}_n}) 
+%	\end{array} \right]
+%}
+%{ 
+%	\langle \mathit{Enter}~a, \mathit{as}, \mathit{rs}, \mathit{us}, h[a \mapsto (\mathit{vs}~\terminal{\textbackslash n}~\mathit{xs}~ \terminal{->}~e)], \sigma \rangle  
+%	\Longrightarrow 
+%	\langle \mathit{Eval}~e~\rho,\mathit{as}', \mathit{rs}, \mathit{us}, h, \sigma \rangle
+%} \\
+\end{mathpar}
+\caption{Operational Semantics}
+\label{fig:operational}
+\end{figure}
+\question With reference to the operational semantics, discuss why it is not necessary to perform lambda lifting.
+\question Discuss to what extent translating to the STG language involves translation to CPS.
+\question (Practical) Implement an interpreter for the STG language/the operational semantics in a language of your choice.
+\end{questions}
+\end{document}

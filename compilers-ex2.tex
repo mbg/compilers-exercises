@@ -104,9 +104,20 @@
 \marksnotpoints
 \marginpointname{ \points}
 
+\immediate\write18{git rev-parse --short HEAD > commit.tex}
+\immediate\write18{date > date.tex}
+\newread\myread
+\openin\myread=commit.tex
+\readline\myread to \commit
+
+\newcommand{\commitlink}[1]{\href{https://github.com/mbg/compilers-exercises/commit/#1}{#1}}
+
 \begin{center}
 \LARGE {\textbf{\color{campurpledark} \course} }\\[-0.2cm]
 \Large \color{campurpledark} Exercise \week\\
+{
+	\footnotesize Compiled on \input{date} using commit \input{commit}
+}
 \end{center}
 
 {\color{campurple}\hrule}
@@ -166,16 +177,16 @@ A program in the STG language is just a collection of global bindings (referred 
  \end{displaymath}
 Note the slightly unusual representation of lambda forms. From a denotational perspective, a lambda form $\terminal{\{} v_1, \terminal{,} \dots \terminal{,} v_n \terminal{\} \textbackslash}\pi~\terminal{\{} x_1, \terminal{,} \dots \terminal{,} x_n \terminal{\} ->}~e$ is equivalent to $\lambda x_1. \ldots.\lambda x_n.e$ in the $\lambda$-calculus. 
 
-The first list of variables and the update flag only have operational meanings. For \emph{local} (\emph{i.e.} non-global) definitions, the first list contains the names of all free variables in $e$. We will define what it means for a variable to be free in the STG language later on.
+The first list of variables and the update flag $\pi$ only have operational meanings. For \emph{local} (\emph{i.e.} non-global) definitions, the first list contains the names of all free variables in $e$. We will define what it means for a variable to be free in the STG language later on.
 
-The update flag indicates whether the closure corresponding to the lambda-form may updated when it reaches its normal form. We will largely ignore this.
+The update flag indicates whether the closure corresponding to the lambda-form may be updated when it reaches its normal form. We will largely ignore this.
 \begin{parts}
 \part (Practical) In a language of your choice\footnote{Your choice should be Haskell}, implement an abstract representation of the language shown in \autoref{fig:stglang}. While this will not be very useful by itself, it will form the foundation for other, practical exercises.
 \part The variables of a lambda-form are free if:
 \begin{itemize}
 \item they are mentioned in the body of the lambda abstraction, and
 \item they are not bound by a lambda or in the pattern of a case alternative, and
-\item they are not bound at the top level of program
+\item they are not bound at the top level of the program
 \end{itemize}
 The first two cases are the usual ones for free variables in the $\lambda$-calculus, but note the third one. Define a function $\mathit{fvs}$ which calculates the set of free variables in a lambda-form.
 \part (Practical) Implement $\mathit{fvs}$ in a language of your choice.
@@ -340,7 +351,7 @@ The operational semantics of the STG language may be found in Chapter 5 of \url{
 	\rho = [\mathit{vs} \mapsto \mathit{ws}_f, \mathit{xs} \mapsto \mathit{ws}_a]
 }
 {
-	\langle \mathit{Enter}~a, \mathit{as}, \mathit{rs}, \mathit{us}, h[a \mapsto (\mathit{vs}~\terminal{\textbackslash n}~\mathit{xs}~ \terminal{->}~e)], \sigma \rangle  
+	\langle \mathit{Enter}~a, \mathit{as}, \mathit{rs}, \mathit{us}, h[a \mapsto (\mathit{vs}~\terminal{\textbackslash n}~\mathit{xs}~ \terminal{->}~e)~ws_f], \sigma \rangle  
 	\Longrightarrow 
 	\langle \mathit{Eval}~e~\rho,\mathit{as}', \mathit{rs}, \mathit{us}, h, \sigma \rangle
 } %\\

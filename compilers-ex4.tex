@@ -1,0 +1,286 @@
+\documentclass[10pt,a4paper]{exam} % turn it into a class! 
+\usepackage[latin1]{inputenc}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{titlesec}
+\usepackage{hyperref}
+\usepackage{fancyeq}
+\usepackage{tikz}
+%\usepackage{tikz-uml}
+\usepackage{mathpartir}
+\usetikzlibrary{matrix,decorations.pathmorphing,shapes,arrows,backgrounds,positioning}
+\usepackage{graphicx,xcolor}
+\usepackage{geometry}
+\usepackage{everysel}
+\usepackage[normalem]{ulem}
+\usepackage{natbib}
+
+\tikzset{
+  treenode/.style = {align=center, inner sep=0pt, text centered,
+    font=\sffamily},
+  arn_n/.style = {treenode, circle, black, font=\sffamily\bfseries, draw=black,
+    fill=white, text width=1.5em},% arbre rouge noir, noeud noir
+  arn_r/.style = {treenode, circle, red, draw=red, 
+    text width=1.5em, very thick},% arbre rouge noir, noeud rouge
+  arn_x/.style = {treenode, rectangle, draw=black,
+    minimum width=0.5em, minimum height=0.5em}% arbre rouge noir, nil
+}
+
+\usepackage[sc]{mathpazo}
+\linespread{1.05}         % Palatino needs more leading (space between lines)
+\usepackage[T1]{fontenc}
+
+% some format settings
+% for hard-bound final submission, use:
+%\setlength{\oddsidemargin}{4.6mm}     % 30 mm left margin - 1 in
+% for soft-bound version and techreport, use instead:
+
+\setlength{\oddsidemargin}{-0.4mm}    % 25 mm left margin - 1 in
+\setlength{\evensidemargin}{\oddsidemargin}
+\setlength{\topmargin}{-5.4mm}        % 20 mm top margin - 1 in
+\setlength{\textwidth}{160mm}         % 20/25 mm right margin
+\setlength{\textheight}{237mm}        % 20 mm bottom margin
+\setlength{\headheight}{5mm}
+\setlength{\headsep}{5mm}
+\setlength{\parindent}{0mm}
+\setlength{\parskip}{\medskipamount}
+\renewcommand\baselinestretch{1.2} % thesis format (not needed for techreport)
+% don't let large figures hijack entire pages
+\renewcommand\topfraction{.9}
+\renewcommand\textfraction{.1}
+\renewcommand\floatpagefraction{.8}
+
+\pagestyle{headandfoot}
+%\pointsinrightmargin
+%\pointname{ marks}
+%\marginpointname{ marks}
+
+\marksnotpoints 
+
+\definecolor{campurple}{HTML}{862D91} 
+\definecolor{campurpledark}{HTML}{2A185C}
+
+\hypersetup{  
+  urlcolor=campurple,
+  linkcolor=campurple,
+  colorlinks=true  
+}
+
+\titlelabel{\llap{\thetitle\quad}}
+
+\newcommand {\lbrac} {\makebox[0pt]{[\kern-1ex[}}
+\newcommand {\rbrac} {\makebox[0pt]{]\kern-1ex]}}
+\newcommand{\denote}[1]{\lbrac~#1~\rbrac}
+
+
+\def\mystrut(#1,#2){\vrule height #1pt depth #2pt width 0pt} 
+
+\titlespacing*{\section}{0pt}{0pt}{0pt}
+
+
+\begin{document}
+	
+
+
+\newcommand{\course}{Compiler Construction}
+\newcommand{\week}{IV}
+\newcommand{\topics}{}
+
+\everymath{\color{campurpledark}}
+\everydisplay{\color{campurpledark}}
+
+%\vspace{15pt}
+
+%\begin{center}
+%\emph{Complete SECTION 1 and ONE other section.}
+%\end{center}
+
+%\begin{center}
+%\emph{Answer SECTION 1 and TWO other sections.}
+%\end{center}
+
+\marksnotpoints
+\pointsdroppedatright
+\marksnotpoints
+\marginpointname{ \points}
+
+\immediate\write18{git rev-parse --short HEAD > commit.tex}
+\immediate\write18{date > date.tex}
+
+\begin{center}
+\LARGE {\textbf{\color{campurpledark} \course} }\\[-0.2cm]
+\Large \color{campurpledark} Exercise \week\\
+{
+	\footnotesize Compiled on \input{date} using commit \input{commit}
+}
+\end{center}
+
+{\color{campurple}\hrule}
+
+\newcommand{\terminal}[1]{\texttt{\color{campurple}#1}}
+\newcommand{\bl}[1]{{\color{black}#1}}
+
+\vspace{0.5cm}
+
+All exercises marked with (Practical) do not need to be completed in time for the supervision, but you should still do them. Exercises marked with (Discussion) \textbf{should} be completed in time for the supervision, but you do not need to submit your code for them.
+
+\begin{questions}
+
+\section*{A lexer and a parser for the STG language}
+\question 
+\begin{parts}
+\part[2] What are the worst-case space and time complexities of Deterministic Finite Automata (DFAs)? \droppoints
+\part[5] Words over an arbitrary alphabet $'o$ can be defined in OCaml simply as:
+\begin{displaymath}
+\begin{array}{lcl}
+\mathbf{type}~{'o}~\mathit{word} & = & {'o}~\mathit{list}
+\end{array}
+\end{displaymath}
+You are also given the following definition of a DFA type in OCaml:
+\begin{displaymath}
+\begin{array}{lcl}
+\mathbf{type}~('q,{'o})~\mathit{dfa} & = & \mathit{DFA}~\mathbf{of}~('q \times {'o} \to {'q}) \times {'q} \times {'q}~\mathit{list}
+\end{array}
+\end{displaymath} 
+The type parameters $'q$ and $'o$ represent states and symbols respectively. Therefore, a $\mathit{dfa}$ value consists of a transition function which, given a state and a symbol, returns a resulting state, an initial state, and a list of final states. Define a function:
+\begin{displaymath}
+\begin{array}{lcl}
+\mathit{runDFA} & : & ('q,{'o})~\mathit{dfa} \to {'o}~\mathit{word} \to \mathit{bool} 
+\end{array}
+\end{displaymath}
+Given a DFA and a word, this function should return $\mathit{true}$ if the word is accepted by the DFA or $\mathit{false}$ otherwise. (You may answer this question in any functional language of your choice.) \droppoints 
+\part Non-deterministic Finite Automata (NFAs) can be converted into DFAs using \emph{Subset Construction} (Section 3.4 of ``Machines and their Languages''\footnotemark[1]). We wish to implement $\mathit{runNFA} : ('q,{'o})~\mathit{nfa} \to {'o}~\mathit{word} \to \mathit{bool}$ which determines if a word is accepted by the NFA. Since NFAs can be converted into DFAs, we could implement this function using $\mathit{runDFA}$. 
+\begin{subparts}
+\subpart[2] Compare the computational complexity of simulating a NFA $N$ for a word $w$ with converting $N$ to a DFA $D$ and then simulating that for $w$. \droppoints 
+\subpart (Practical) Implement Subset Construction and $\mathit{runNFA}$ in a functional language of your choice.
+\end{subparts}
+\part[2] A Computer Scientist who has not attended a course on Automata Theory or read Chapter 4 of ``Machines and their Languages''\footnote{\url{http://www.cl.cam.ac.uk/~mbg28/publications/g52mal-revision-guide.pdf}} has implemented a library for lexical analysis. The interface of the library is a single function:
+\begin{displaymath}
+\begin{array}{lcl}
+\mathit{lexer} & : & (('o, {'t})~\mathit{rule})~\mathit{list} \to {'o}~\mathit{word} \to ('t~\mathit{list})~\mathit{option}
+\end{array}
+\end{displaymath}
+Given a list of rules and an input word, it returns either a list of tokens or $\mathit{None}$. Rules are defined as pairs of \textbf{regular} expressions and semantic actions:
+\begin{displaymath}
+\begin{array}{lcl}
+\mathbf{type}~('o, {'t})~\mathit{rule} & = & \mathit{Rule}~\mathbf{of}~{'o}~\mathit{RE} \times ({'o}~\mathit{word} \to {'t})
+\end{array}
+\end{displaymath}
+\newpage
+The library uses the following algorithm:
+\begin{enumerate}
+\item Read a character from the input word and add it to a buffer
+\item For every regular expression in the list of rules:
+\begin{enumerate}
+\item Apply the regular expression to the buffer
+\item If successful:
+\begin{enumerate}
+\item Remember the rule that matched the input and go to Step 1
+\end{enumerate}
+\end{enumerate}
+\item If no rule applied to the input word:
+\begin{enumerate}
+\item If a rule matched the input previously:
+\begin{enumerate}
+\item consume as much input as possible from the buffer while the rule still matched and apply the corresponding semantic action to the sub-word to generate a token
+\item Proceed with Step 2
+\end{enumerate} 
+\item Else fail
+\end{enumerate}
+\end{enumerate}
+Explain why this is computationally inefficient\footnote{Funnily enough, I may have a repository on GitHub which does exactly this: \url{https://github.com/mbg/Text.Lexer}}. \droppoints
+\part[4] Suggest a better approach without changing the interface of the library. Justify your answer. \droppoints  
+\part (Practical) Implement your own library for lexical analysis using the approach you have suggested.
+\end{parts}
+\question (Discussion) In a language of your choice, and optionally with the help of a lexer generator of your choice, implement a lexer for the STG language.
+%\question[3] Traditionally, a compiler reads a file, runs the contents through a lexer to obtain a list of tokens and then hands those to the parser which produces an abstract syntax tree. A \emph{threaded lexer} is a lexer which is called by the parser whenever it requires more tokens and only returns the next token, rather than a list of tokens. Explain why this is both more efficient (time and space) and leads to a better experience for programmers who use the compiler. \droppoints 
+\question
+\begin{parts}
+\part[11] For each of the following words, decide whether they are members of $L(G)$ where the CFG $G$ is given by (lower-case characters are terminals and upper-case characters are non-terminals):
+\begin{displaymath}
+\begin{array}{lcl}
+S & \to & cZ \mid X \mid Y \\
+X & \to & aXb \mid \varepsilon \\
+Y & \to & bbc \\
+Z & \to & cZdd \mid \varepsilon
+\end{array}
+\end{displaymath}
+If a word is in $L(G)$, you should give the full derivation for it.
+\begin{subparts}
+\subpart $\varepsilon \in L(G)$?
+\subpart $a \in L(G)$?
+\subpart $c \in L(G)$?
+\subpart $ab \in L(G)$?
+\subpart $ba \in L(G)$?
+\subpart $bbc \in L(G)$?
+\subpart $cd \in L(G)$?
+\subpart $ccdd \in L(G)$?
+\subpart $cabba \in L(G)$?
+\subpart $cccddd \in L(G)$?
+\subpart $aaabbb \in L(G)$?
+\end{subparts}
+\part[4] Explain the difference between leftmost and rightmost derivations of Context-Free Grammars. Give an example of \emph{one} parsing technique for each type of derivation. \droppoints
+\part[2] Explain why some CFGs are ambiguous and illustrate your answer using a suitable example. \droppoints 
+\part[5] You are given the following CFG for a simple, ambiguous expression language. Disambiguate it, assuming that $!$ binds more strongly than $+$ and $-$, which both bind equally strong. We assume that $+$ and $-$ are left-associative.
+\begin{displaymath}
+\begin{array}{lcl}
+E & = & E + E \mid E - E \mid E! \mid (E) \mid a \mid b \mid c
+\end{array}
+\end{displaymath} \droppoints 
+\end{parts}
+\question We will begin this question with some theory related to Context-Free Grammars which you may or may not have come across before. For illustration, we will use the following CFG as an example:
+\begin{displaymath}
+\begin{array}{lcl}
+S & \to & aABe \\
+A & \to & bcA \mid c \\
+B & \to & d
+\end{array}
+\end{displaymath}
+Now we can define the following terminology:
+\begin{parts}
+\part[1] An \emph{item} is a production with a dot anywhere in the right-hand side. \emph{E.g.}
+\begin{displaymath}
+\begin{array}{cc}
+B \to \cdot d & B \to d \cdot
+\end{array}
+\end{displaymath}
+are items for $B$. An item is \emph{complete} if the dot is the rightmost symbol in the item, so that \emph{e.g.} $B \to d \cdot$ is complete. Give all items for $S$ and state whether they are complete or not. \droppoints 
+\part[3] Given an arbitrary CFG $G = \langle N, T, P, S \rangle$, a word $\phi \in (N \cup T)^*$ is a \emph{sentential form} for $G$ if and only if $S \overset{*}{\underset{G}{\Rightarrow}} \phi$. A \emph{right-sentential form} is a sentential form that can be derived by rightmost derivation. Finally, a \emph{handle} of a right-sentential form $\phi$ is a substring $\alpha$ of $\phi$ such that $S \overset{*}{\underset{\mathit{rm}}{\Rightarrow}} \delta Aw \underset{\mathit{rm}}{\Rightarrow} \delta \alpha w$ and $\delta \alpha w = \phi$ where $\alpha, \delta, \phi \in (N \cup T)^*$ and $w \in T^*$. For an unambiguous grammar, the rightmost derivation is unique and we can therefore talk about ``the handle'' as opposed to merely ``a handle''. The following is a rightmost derivation for our grammar:
+\begin{displaymath}
+S \underset{\mathit{rm}}{\Rightarrow} aABe \underset{\mathit{rm}}{\Rightarrow} aAde \underset{\mathit{rm}}{\Rightarrow} abcAde
+\end{displaymath}
+Here $aABe$, $aAde$, and $abcAde$ are right-sentential forms. What is the handle for each? \droppoints 
+\part[3] A \emph{viable prefix} of a right-sentential form $\phi$ is any prefix $\gamma$ of $\phi$ ending no farther right than the right end of the handle of $\phi$. An item $A \to \alpha \cdot \beta$ is \emph{valid} for a viable prefix $\gamma$ is there is a rightmost derivation
+\begin{displaymath}
+S \overset{*}{\underset{\mathit{rm}}{\Rightarrow}} \delta Aw \underset{\mathit{rm}}{\Rightarrow} \delta \alpha \beta w
+\end{displaymath}
+and $\delta \alpha = \gamma$. List all viable prefixes of the handles you gave as answers for the previous part. \droppoints 
+\part[3] For each non-$\varepsilon$ viable prefix you gave in your answer for the previous part, give the corresponding valid item. \droppoints 
+\part[6] For every CFG, the set of viable prefixes is regular. Therefore, we can construct a DFA which recognises viable prefixes and their valid items. The states of such a DFA are sets of items valid for a recognised viable prefix. Construct a DFA which recognises viable prefixes for the CFG given at the start of this question. By convention, when drawing such DFAs, we do not include error states and transitions to them. \droppoints
+\part[10] Knowing the valid item(s) for a viable prefix allows a rightmost derivation in reverse to be found:
+\begin{itemize}
+\item If $A \to \alpha \cdot$ is a complete, valid item for a viable prefix $\gamma = \delta \alpha$ of a right-sentential form $\gamma w$ ($w \in T^*$), then it \emph{appears} that $A \to \alpha$ can be used at the last step, and that the previous right-sentential form is $\delta A w$.
+\item If this is indeed always the case for an arbitrary CFG $G$, then for any $x \in L(G)$, since $x$ is a right-sentential form, previous right-sentential forms can be determined until the start symbol is reached, giving a right-most derivation of $x$.
+\end{itemize}
+CFGs for which knowing a complete valid item is sufficient to determine the previous right-sentential form are called $LR(0)$. Given a DFA which recognises viable prefixes, a LR(0) parser can be constructed as follows:
+\begin{itemize}
+\item In a state without complete items: read next terminal symbol and push it onto a stack and move to a new state by following the transition corresponding to the read symbol (Shift).
+\item In a state with a single complete item, the top of the stack will contain the handle of the current right-sentential form. This handle is just the right-hand side of the valid item. Reduce to the previous right-sentential form by replacing the handle on the stack with the left-hand side of the valid item. Finally, move to the state indicated by the new viable prefix on the parse stack (Reduce).
+\item If a state contains both complete and incomplete items, or if a state contains more than one complete item, then the grammar is not LR(0).
+\end{itemize} 
+Using the DFA you produced as answer for the previous part, show how to parse $abccde$ starting from an empty stack. \droppoints 
+\part[4] Consider the words $abcbcbccde$ and $abcbcbcbcbccde$. What happens to the parse stack when you parse them? Suggest why this may be happening and how you may be able to improve it. \droppoints 
+\part[4] In general, if $A \to \alpha \cdot$ is a complete, valid item for a viable prefix $\gamma = \delta \alpha$, we only know that it \emph{may} be possible to use $A \to \alpha$ to derive $\gamma w$ from $\delta A w$. 
+\begin{itemize}
+\item $A \to \alpha \cdot$ may be valid because of a different rightmost derivation $S \overset{*}{\underset{\mathit{rm}}{\Rightarrow}} \delta Aw' \underset{\mathit{rm}}{\Rightarrow} \phi w'$.
+\item There could be two or more complete items valid for $\gamma$.
+\item There could be a handle of $\gamma w$ that includes symbols of $w$.
+\end{itemize}
+Explain how lookahead addresses this problem. \droppoints 
+\part[2] Explain what problem LALR parses address and how they can be obtained from LR parsers. \droppoints 
+\end{parts}
+\question (Discussion) In a language of your choice, and optionally with the help of a parser generator of your choice, implement a parser for the STG language. This will require you to have implemented the abstract syntax tree for the STG language.
+\end{questions}
+\end{document}

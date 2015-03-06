@@ -135,11 +135,11 @@ In the previous exercise, we described the STG machine which serves as a target 
 \begin{parts}
 	\part[4] Describe what calling conventions are and what they are used for. Illustrate your answer using an example in pseudo assembly code. \droppoints 
 	\part[2] Explain the difference between calling conventions and evaluation strategies. \droppoints 
-	\part[2] A compiler author is writing a code generator which targets the C language. His intention is to implement CPS so that each function from his source language is translated into a C function which pops its continuation off an argument stack and then calls the continuation at the end. For ``convenience'', he defines the following macro:
+	\part[2] A compiler author is writing a code generator which targets the C language. His intention is to implement CPS so that each function from his source language is translated into a C function which pops its continuation off an argument stack and then calls the continuation at the end. For ``convenience'', they define the following macro:
 	\begin{verbatim}
 	#define JUMP(x) (*x)()
 	\end{verbatim}
-	He then uses the macro to jump to continuations:
+	They then use the macro to jump to continuations:
 	\begin{verbatim}
 	void foo() {
 	  void* cont = *Stack--; // pop continuation off the stack
@@ -152,11 +152,11 @@ In the previous exercise, we described the STG machine which serves as a target 
 	\begin{verbatim}
 	void* foo();
 	\end{verbatim}
-	He also changes his macro to:
+	They also change their macro to:
 	\begin{verbatim}
 	#define JUMP(x) return(x)
 	\end{verbatim}
-	Finally, he implements the following:
+	Finally, they implement the following:
 	\begin{verbatim}
 	int main(int argc, char** argv) {
 	  void* cont = &foo;

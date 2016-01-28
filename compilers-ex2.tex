@@ -1,0 +1,931 @@
+\documentclass[10pt,a4paper]{exam} % turn it into a class! 
+\usepackage[latin1]{inputenc}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{titlesec}
+\usepackage{hyperref}
+\usepackage{fancyeq}
+\usepackage{tikz}
+%\usepackage{tikz-uml}
+\usepackage{mathpartir}
+\usetikzlibrary{matrix,decorations.pathmorphing,shapes,arrows,backgrounds,positioning}
+\usepackage{graphicx,xcolor}
+\usepackage{geometry}
+\usepackage{everysel}
+\usepackage[normalem]{ulem}
+\usepackage{mdframed}
+
+\tikzset{
+  treenode/.style = {align=center, inner sep=0pt, text centered,
+    font=\sffamily},
+  arn_n/.style = {treenode, circle, black, font=\sffamily\bfseries, draw=black,
+    fill=white, text width=1.5em},% arbre rouge noir, noeud noir
+  arn_r/.style = {treenode, circle, red, draw=red, 
+    text width=1.5em, very thick},% arbre rouge noir, noeud rouge
+  arn_x/.style = {treenode, rectangle, draw=black,
+    minimum width=0.5em, minimum height=0.5em}% arbre rouge noir, nil
+}
+
+\usepackage[sc]{mathpazo}
+\linespread{1.05}         % Palatino needs more leading (space between lines)
+\usepackage[T1]{fontenc}
+
+% some format settings
+% for hard-bound final submission, use:
+%\setlength{\oddsidemargin}{4.6mm}     % 30 mm left margin - 1 in
+% for soft-bound version and techreport, use instead:
+
+\setlength{\oddsidemargin}{-0.4mm}    % 25 mm left margin - 1 in
+\setlength{\evensidemargin}{\oddsidemargin}
+\setlength{\topmargin}{-5.4mm}        % 20 mm top margin - 1 in
+\setlength{\textwidth}{160mm}         % 20/25 mm right margin
+\setlength{\textheight}{237mm}        % 20 mm bottom margin
+\setlength{\headheight}{5mm}
+\setlength{\headsep}{5mm}
+\setlength{\parindent}{0mm}
+\setlength{\parskip}{\medskipamount}
+\renewcommand\baselinestretch{1.2} % thesis format (not needed for techreport)
+% don't let large figures hijack entire pages
+\renewcommand\topfraction{.9}
+\renewcommand\textfraction{.1}
+\renewcommand\floatpagefraction{.8}
+
+\pagestyle{headandfoot}
+%\pointsinrightmargin
+%\pointname{ marks}
+%\marginpointname{ marks}
+
+\marksnotpoints 
+
+\definecolor{campurple}{HTML}{862D91} 
+\definecolor{campurpledark}{HTML}{2A185C}
+
+\hypersetup{  
+  urlcolor=campurple,
+  linkcolor=campurple,
+  colorlinks=true  
+}
+
+\titlelabel{\llap{\thetitle\quad}}
+
+\newcommand {\lbrac} {\makebox[0pt]{[\kern-1ex[}}
+\newcommand {\rbrac} {\makebox[0pt]{]\kern-1ex]}}
+\newcommand{\denote}[1]{\lbrac~#1~\rbrac}
+
+
+\def\mystrut(#1,#2){\vrule height #1pt depth #2pt width 0pt} 
+
+\titlespacing*{\section}{0pt}{0pt}{0pt}
+
+
+\begin{document}
+
+\newcommand{\course}{Compiler\\[-0.4cm]Construction}
+\newcommand{\week}{II}
+
+\everymath{\color{campurpledark}}
+\everydisplay{\color{campurpledark}}
+
+%\vspace{15pt}
+
+%\begin{center}
+%\emph{Complete SECTION 1 and ONE other section.}
+%\end{center}
+
+%\begin{center}
+%\emph{Answer SECTION 1 and TWO other sections.}
+%\end{center}
+
+\marksnotpoints
+\pointsdroppedatright
+\marksnotpoints
+\marginpointname{ \points}
+
+\begin{center}
+\LARGE {\textbf{\color{campurpledark} \course} }\\[-0.1cm]
+\Large \color{campurpledark} Supervision \week: A New Semantics\\
+\end{center}
+
+{\color{campurple}\hrule}
+
+\newcommand{\metavar}[1]{{\color{campurple}#1}}
+
+\vspace{0.5cm}
+
+\newcommand{\terminal}[1]{\texttt{\color{campurple}#1}}
+\newcommand{\bl}[1]{{\color{black}#1}}
+
+\begin{center}
+\parbox[c]{300pt}{
+A long time ago in a supervision far, far away... \\
+
+We have constructed a lexer and a parser for the {STG Language} which turn a textual representation of the concrete syntax of the language into an abstract syntax tree. \\
+
+Before we can compile the STG language to C, we must give it a semantics. Unlike other machines, whose programs are sequences of instructions, programs for the Spineless Tagless G-Machine are written directly in the STG language -- a functional language. \\
+
+In this exercise, we will attach an operational semantics to the STG language and construct an interpreter for it. 
+}
+\end{center}
+
+\section*{Exercises}
+
+\begin{questions}
+    \question In computer science, we typically view functions as abstractions over expressions, which can be reduced to some value once all parameters have been substituted for arguments. In the context of programming languages, we say that the function \emph{returns} a value because it is passed to the calling function. For example, consider the following function which computes the $n$th fibonacci number:
+    \begin{displaymath}
+    \begin{array}{c|c}
+    \textbf{OCaml} & \textbf{Haskell} \\ \hline
+    \begin{array}{l}
+    \mathbf{let}~\mathbf{rec}~\mathit{fib}~n = \\
+    \quad \mathbf{if}~n=0 \\
+    \quad \mathbf{then}~1 \\
+    \quad \mathbf{else}~\mathbf{if}~n=1 \\
+    \qquad \mathbf{then}~1 \\
+    \qquad \mathbf{else}~\mathit{fib}(n-1) + \mathit{fib}(n-2)
+    \end{array} &
+    \begin{array}{lcl}
+    \mathit{fib} & :: & \mathit{Int} \to \mathit{Int} \\
+    \mathit{fib}~0 & = & 0 \\
+    \mathit{fib}~1 & = & 1 \\
+    \mathit{fib}~n & = & \mathit{fib}~(n-1) + \mathit{fib}~(n-2)
+    \end{array}
+    \end{array}
+    \end{displaymath}
+    If we apply $\mathit{fib}$ to an integer, then it will return the corresponding number in the fibonacci sequence to the calling function. However, this is not the only way in which we can construct functions.
+    
+    Another approach is to write functions which \emph{never} return. Instead, they are higher-order functions which take one or more \emph{continuations} as arguments. A continuation is a function which takes the result of another function as argument and which is called when that function has finished computing its result. For example, a modified version of $\mathit{fib}$ in \emph{Continuation-Passing Style} (CPS) is:
+    \begin{displaymath}
+    \begin{array}{l|l}
+    \textbf{OCaml} & \begin{array}{l}
+    \mathbf{let}~\mathbf{rec}~\mathit{fib\_cps}~(n,k) = \\
+    \quad \mathbf{if}~n=0 \\
+    \quad \mathbf{then}~k~1 \\
+    \quad \mathbf{else}~\mathbf{if}~n=1 \\
+    \qquad \mathbf{then}~k~1 \\
+    \qquad \mathbf{else}~\mathit{fib}\_cps(n-1, \lambda a \to \mathit{fib\_cps}(n-2, \lambda b \to k~(a+b))) 
+    \end{array} \\ \hline 
+    \textbf{Haskell} & \begin{array}{lcl}
+    \mathit{fib\_cps} & :: & \mathit{Int} \to (\mathit{Int} \to a) \to a \\
+    \mathit{fib\_cps}~0~k & = & k~0 \\
+    \mathit{fib\_cps}~1~k & = & k~1 \\
+    \mathit{fib\_cps}~n~k & = & \mathit{fib\_cps}~(n-1)~(\lambda a \to \mathit{fib\_cps}~(n-2)~(\lambda b \to k~(a+b))) 
+    \end{array}
+    \end{array}
+    \end{displaymath}
+    Instead of returning the $n$th number in the fibonacci sequence like $\mathit{fib}$ did, $\mathit{fib\_cps}$ calls $k$ with the corresponding fibonacci number instead. 
+    \begin{parts}
+        
+        \part Convert the following definition of a function which computes the greatest common divider into Continuation-Passing Style:
+        \begin{displaymath}
+        \begin{array}{c|c}
+        \textbf{OCaml} & \textbf{Haskell} \\ \hline
+        \begin{array}{l}
+        \mathbf{let}~\mathbf{rec}~\mathit{gcd}~(m,n) = \\
+        \quad \mathbf{if}~m=n \\
+        \quad \mathbf{then}~m \\
+        \quad \mathbf{else}~\mathbf{if}~m<n \\
+        \qquad \mathbf{then}~\mathit{gcd}(m,n-m) \\
+        \qquad \mathbf{else}~\mathit{gcd}(m-n,n)
+        \end{array} & \begin{array}{lcl}
+        \mathit{gcd} & :: & \mathit{Int} \to \mathit{Int} \to \mathit{Int} \\
+        \mathit{gcd}~m~n \\
+        \multicolumn{3}{l}{\quad \begin{array}{clcl}
+            \mid & m == n & = & m \\
+            \mid & m < n & = & \mathit{gcd}~m~(n-m) \\
+            \mid & \mathit{otherwise} & = & \mathit{gcd}~(m-n)~n
+            \end{array}}
+        \end{array}
+        \end{array}
+        \end{displaymath}
+        
+        \part Compare the definitions of $\mathit{fib}$ and $\mathit{fib\_cps}$. Can you identify a property of functions in programming which $\mathit{fib\_cps}$ has, but $\mathit{fib}$ does not? Do $\mathit{gcd}$ or $\mathit{gcd\_cps}$ have the same property? What might this suggest about Continuation-Passing Style?
+        
+        %\part Consider the problem of compiling a program in CPS to the instruction set for a typical computer
+        
+    \end{parts}
+    
+    \question $\lambda$-forms, $\mathit{vs}~\terminal{\textbackslash}\pi~\mathit{xs}~\terminal{->}~\mathit{e}$, in the STG language (\autoref{fig:stglang}) contain two sets of variables: the set of free variables in $e$, $\mathit{vs}$, and the set of variables which are bound by this $\lambda$-form, $\mathit{xs}$.
+        
+    The variables of a $\lambda$-form are free if:
+    \begin{itemize}
+        \item they are mentioned in the body of the $\lambda$-form, $e$, and
+        \item they are not bound by another $\lambda$-form or in the pattern of a case alternative, and
+        \item they are not bound at the top level of the program, \emph{i.e.} they are not \emph{globals}
+    \end{itemize}
+    The first two cases are the usual ones for free variables in the $\lambda$-calculus, but note the unusual third case. For example, consider the following program in the STG language:
+    \begin{verbatim}
+g = {y,z} \n {f} -> case y {} of
+    Nil {}      -> k { }
+    Cons {x,xs} -> f { x, xs, z }
+    
+k = {} \u {} -> Nil { }
+    \end{verbatim}
+    In the definition of $g$, $y$ and $z$ are free because they are mentioned in the body of the $\lambda$-form, but are not bound anywhere, nor are they the names of global definitions. $k$ is bound because it is the name of a top-level definition. $x$ and $xs$ are bound by the case alternative, and $f$ is bound by the $\lambda$-form.
+    
+    Define a function, $\mathit{validateFVS}$, which validates that the variables listed in the set of free variables, $\mathit{vs}$, of an arbitrary $\lambda$-form are indeed free. This may be useful since the set $\mathit{vs}$ is part of the concrete syntax of the language, so it is worth checking whether the user has actually got this right when he or she wrote the program.
+    
+    \question Most abstract or virtual machines have a set of instructions which can be put in a sequence to construct a program. The Spineless Tagless G-Machine is different: it does not have such an instruction set. Instead, the STG language -- a functional programming language -- is the equivalent of an instruction set for the Spineless Tagless G-Machine. The operational semantics of the machine are attached directly to the STG language.
+    
+    \begin{parts}
+    
+        \part In imperative languages, functions are traditionally defined at only the top-level. Only their parameters, local variables, and global variables are in scope. In functional languages, on the other hand, anonymous functions may be defined within the scope of another function. These functions will \emph{capture} variables which are in the surrounding scope: \emph{i.e.} the captured variables may be used in the scope of the anonymous function.
+        
+        Using appropriate examples, discuss potential pitfalls when implementing a programming language which has anonymous functions. Can you propose a workaround?
+        
+        \part The semantics of the Spineless Tagless G-Machine are \emph{lazy}. In other words, it implements \emph{call-by-need} evaluation as well as \emph{sharing}. Call-by-need is an evaluation strategy which only evaluates a term when its value must be known to progress. Without knowing the exact semantics of the Spineless Tagless G-Machine, can you identify which type(s) of expression(s) in the STG language will likely not be able to progress without knowing the value of a sub-expression?
+        
+        \part The STG language is \emph{pure}. In other words, functions will always return the same result for a given set of arguments and they cannot have side-effects, such as outputting text to a terminal or writing data to a file. Consider the following program in the STG language:        
+        \begin{verbatim}
+foo = {} \n {xs,ys} -> let zs = {xs,ys} \u {} -> zip {xs,ys};
+                       in concat {zs,zs}
+        \end{verbatim}
+        Because our evaluation strategy is call-by-need, \texttt{zs} will not be evaluated before being passed as an argument to the \texttt{concat} function. \texttt{concat} is of course unaware that is being given the same argument twice and we also do not want to evaluate \texttt{zs} twice, since it may be an arbitrarily complex expression and we know that the result must always be the same. This is where \emph{sharing} comes into play: if a $\lambda$-form is marked as updatable (\emph{i.e.} it has the \texttt{u} flag instead of the \texttt{n} flag), then the expression will be replaced with the value it evaluates to after that value has been computed for the first time.
+        
+        The update flag can safely be set for every $\lambda$-form in a program, but updates are computationally expensive, so we would like to avoid having to perform updates when possible, such as \emph{e.g.} when the expression of the $\lambda$-form is already a normal form. Can you identify general cases where it is not necessary to have have an updatable $\lambda$-form?
+    \end{parts}
+    \newpage
+    \question A program in the STG language is just a collection of global bindings, referred to as \emph{globals}, and has the general form:
+    \begin{displaymath}
+    \begin{array}{lcl}
+    g_1 & = & \mathit{vs}_1~\terminal{\textbackslash}\pi~\mathit{xs}_1~\terminal{->}~\mathit{e}_1 \\
+    \ldots \\
+    g_n & = & \mathit{vs}_n~\terminal{\textbackslash}\pi~\mathit{xs}_n~\terminal{->}~\mathit{e}_n \\
+    \end{array}
+    \end{displaymath}
+    One of these globals must be $\terminal{main}$, which is the first function to be evaluated. For example, \autoref{fig:program} shows a simple program in the STG language.
+    
+    \begin{figure}
+    \begin{mdframed}
+    \begin{center}
+        \begin{tabular}{lcl}
+            \texttt{succ} & \texttt{=} & \texttt{\{\} \textbackslash n \{x\} -> +\# \{x, 1\#\}}\\
+            \texttt{list} & \texttt{=} & \texttt{\{\} \textbackslash n \{\} -> Cons \{5\#, Nil\}}\\
+            \texttt{map} & \texttt{=} & \texttt{\{\} \textbackslash n \{f,xs\} ->} \\
+            &   & \quad \texttt{case xs \{\} of} \\
+            &   & \quad \begin{tabular}[t]{lcl}
+                \texttt{Nil \{\}} & \texttt{->} & \begin{tabular}{l}
+                    \texttt{Nil \{\}}
+                \end{tabular}  \\
+                \texttt{Cons \{y,ys\}} & \texttt{->} & \begin{tabular}[t]{llcl}
+                    \texttt{let} & \texttt{fy} & \texttt{=} & \texttt{\{f,y\} \textbackslash u \{\} -> f \{y\}} \\
+                    & \texttt{mfy} & \texttt{=} & \texttt{\{f,ys\} \textbackslash u \{\} -> map \{f,ys\}} \\
+                    \multicolumn{4}{l}{\texttt{in Cons \{fy,mfy\}}}
+                \end{tabular}
+            \end{tabular} \\
+            \texttt{main} & \texttt{=} & \texttt{\{\} \textbackslash n \{\} -> map \{succ, list\}}
+        \end{tabular}
+    \end{center}
+    \caption{Sample Program}
+    \label{fig:program}
+    \end{mdframed}
+    \end{figure}
+
+    \begin{parts}
+        \part In general, the initial configuration of the STG machine is (see Appendix \ref{app:semantics} for details):
+        \begin{displaymath}
+        \begin{array}{l}
+        \langle \mathit{Eval}~(\terminal{main \{\}})~\{\},\{\},\{\},\{\}, h_{\mathit{init}}, \sigma \rangle \\
+        \begin{array}{llcl}
+        \mathbf{where} & \sigma & = & \left[ \begin{array}{l}
+        g_1 \mapsto (\mathit{Addr}~a_1) \\
+        \ldots \\
+        g_n \mapsto (\mathit{Addr}~a_n)
+        \end{array} \right] \\
+        & h_{\mathit{init}} & = &  \left[ \begin{array}{l}
+        a_1 \mapsto (\mathit{vs}_1~\terminal{\textbackslash}\pi_1~\mathit{xs}_1~\terminal{->}~e_1)~(\overline{\sigma~\mathit{vs}_1}) \\
+        \ldots \\
+        a_n \mapsto  (\mathit{vs}_n~\terminal{\textbackslash}\pi_n~\mathit{xs}_n~\terminal{->}~e_n)~(\overline{\sigma~\mathit{vs}_n})
+        \end{array} \right]
+        \end{array}
+        \end{array}
+        \end{displaymath}
+        What is the initial configuration for the program shown in \autoref{fig:program}?
+        
+        \part Apply rules from the operational semantics in Appendix \ref{app:semantics} to the initial configuration for the program in \autoref{fig:program} until no more rules apply. What do you make of the result?
+    \end{parts}
+    
+\end{questions}
+
+\section*{Practical Exercises}
+
+For the practical exercises, we will implement a compiler from the STG language (shown in \autoref{fig:stglang}) to C. You may use a programming language of your choice, but note that skeleton code is available in Haskell (and will save you much of the work). 
+
+\begin{mdframed}
+\textbf{Updating the Skeleton Code}\\
+The skeleton code has been updated for this exercise. It is available as the \texttt{supervision2} branch on the \texttt{mbg/compconstr-code} repository. Note that the \texttt{supervision2} branch does not include any answers to the previous exercises. 
+
+If you have forked the repository to your own GitHub account, you should first bring your fork up-to-date:
+\begin{verbatim}
+$ git remote add upstream https://github.com/mbg/compconstr-code
+$ git fetch upstream
+\end{verbatim}
+At this point, you should ensure that you are on your own \texttt{master} branch:
+\begin{verbatim}
+$ git checkout master
+\end{verbatim}
+Next, merge the (potentially) updated \texttt{upstream/master} branch into your own:
+\begin{verbatim}
+$ git merge upstream/master
+\end{verbatim}
+In theory, you should not encounter any merge errors at this point. If you do, you will have to fix and commit them before proceeding.
+
+Next, you should merge the \texttt{upstream/supervision2} branch into your own:
+\begin{verbatim}
+$ git merge upstream/supervision2
+\end{verbatim}
+If you haven't created a fork and the \texttt{origin} remote is \texttt{https://github.com/mbg/compconstr-code}, then you should pull changes from there instead:
+\begin{verbatim}
+$ git pull
+$ git merge superivison2
+\end{verbatim}
+Again, you should not encounter any merge errors, but if there are any, fix and commit them before proceeding. 
+
+There is a new dependency, so you will need to install it:
+\begin{verbatim}
+$ cabal install --only-dependencies
+$ cabal configure
+\end{verbatim}
+Once the new dependency has been installed, verify that the program compiles successfully (repeat this step whenever you wish to re-compile the compiler):
+\begin{verbatim}
+$ cabal build
+\end{verbatim}
+If successful, this should create an executable in the \texttt{./dist/build/stg/} directory. You can invoke the compiler with \emph{e.g.}, although note that this will fail with a parse error until you have completed the exercises below:
+\begin{verbatim}
+$ ./dist/build/stg/stg ./tests/Map.stg --entry=main
+\end{verbatim} 
+The compiler will attempt to parse all files specified as inputs to the program. If a file can be parsed, the generated abstract syntax tree will be pretty-printed to the standard output and then interpreted, starting from the global binding named \texttt{main} (or whatever is specified by the \texttt{--entry=BINDING} flag on the command-line, if present).
+
+If an error occurs, that error will be displayed instead. In this case, the interpreter likely won't be able to do anything since there is no binding named \texttt{main} and will terminate with the \texttt{Can't reduce further.} message. Alternatively, if there is a binding named \texttt{main}, then the interpreter will likely crash with the \texttt{Prelude: undefined} message.
+\end{mdframed}
+
+\begin{questions}
+%\question Abstract machines, typically have an instruction set over which the operational semantics are defined. Programs are sequences of instructions. In our case, the instruction set consists of only $\mathbf{PUSH}$ and $\mathbf{ADD}$. However, as we have noted above, compiling a functional language to such an instruction set is not straight-forward.
+
+%The Spineless Tagless G-Machine\footnote{A full description of this machine may be found in \url{http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.53.3729&rep=rep1&type=pdf} which you may find useful. Only Part II is relevant to this exercise.} was designed as a target machine for non-strict, functional languages (primarily Haskell). Programs for the STG machine are written in the STG language which, unlike most other machine languages, is a functional language which is given an operational semantics. This makes it easy to translate more high-level functional languages into STG programs. Its syntax is shown in \autoref{fig:stglang}. We use a dark purple, italic font ($\mathit{symbol}$) to denote non-terminals, a light purple, typewriter font ($\terminal{terminal}$) to denote terminals, and a regular black font for everything else. Sequences are denoted using $\ldots$ and numbered symbols.
+
+\question Extend your compiler with the $\mathit{validateFVS}$ function and use it to validate the abstract syntax tree of source files which have been parsed successfully.
+
+\question Implement an interpreter for the STG language according to the specification of the operational semantics in Appendix \ref{app:semantics}. If you are using the skeleton code, a basic framework for the interpreter can be found in the \texttt{src/Interpreter.hs} file. In particular, you should replace all occurrences of $\mathit{undefined}$ with code of your own.
+
+\begin{mdframed}
+\textbf{Aside: Sequencing operations}\\
+Note that the type of the $\mathit{step}$ function is $\mathit{Config} \to \mathit{Maybe}~\mathit{Config}$. In other words, the function takes a configuration as argument and either returns a new configuration wrapped in the $\mathit{Just}$ constructor or $\mathit{Nothing}$ to indicate failure. While it is useful to know that a function may fail, this may also be somewhat cumbersome. For example, consider using the $\mathit{val}$ function, which may fail if a variable can neither be found in the local nor the global environment, inside the definition of $\mathit{step}$. If we use $\mathit{val}$, we have to check if it was successful or not to determine whether we wish to proceed with the result or return failure ourselves. One such example might be the rule for built-in operators where we need to look up the values of the arguments before proceeding:
+\begin{displaymath}
+\begin{array}{l}
+\mathit{step}~(\mathit{Eval}~(\mathit{OpE}~op~\hslist{x1,x2}~\_)~p,\mathit{as},\mathit{rs},\mathit{us},\mathit{h},\mathit{env}) = \\
+\quad \mathbf{case}~\mathit{val}~p~\mathit{M.empty}~\mathit{x1}~\mathbf{of} \\
+\qquad \begin{array}{lcl}
+\mathit{Nothing} & \to & \mathit{Nothing} \\
+\mathit{Just~i1} & \to & \mathbf{case}~\mathit{val}~p~\mathit{M.empty}~\mathit{x2}~\mathbf{of}
+\end{array} \\
+\qquad \qquad \begin{array}{lcl}
+\mathit{Nothing} & \to & \mathit{Nothing} \\
+\mathit{Just~i2} & \to & \mathit{Just}~(\ldots)
+\end{array}
+\end{array}
+\end{displaymath}
+This is of course extremely tedious, since we have to write the same test over and over again. Fortunately, there is some Haskell magic to help us out. It just so happens that the $\mathit{Maybe}$ type has a particular property which allows us to make use of a special syntax in Haskell: the $\mathbf{do}$-notation. Using this notation, the above code may be rewritten as:
+\begin{displaymath}
+\begin{array}{l}
+\mathit{step}~(\mathit{Eval}~(\mathit{OpE}~op~\hslist{x1,x2}~\_)~p,\mathit{as},\mathit{rs},\mathit{us},\mathit{h},\mathit{env}) = \mathbf{do} \\
+\quad \begin{array}{lcl}
+\mathit{i1} & \leftarrow & \mathit{val}~p~\mathit{M.empty}~\mathit{x1} \\
+\mathit{i2} & \leftarrow & \mathit{val}~p~\mathit{M.empty}~\mathit{x2} \\
+\mathit{Just}~(\ldots)
+\end{array}
+\end{array}
+\end{displaymath}
+The $\mathbf{do}$ keyword is followed by a sequence of statements, which come in two forms. A statement of form $x \leftarrow m$ where $m :: \mathit{Maybe}~a$ and $x :: a$ (for some type $a$) binds $x$ in subsequent statements by evaluating $m$ and automagically performing the test shown above, extracting the value of type $a$ from the value of type $\mathit{Maybe}~a$ if successful. A statement of form $m$ where $m :: \mathit{Maybe}~a$ can also be used. If it occurs as the last statement in a $\mathbf{do}$-block, then it is used as the value of the $\mathit{do}$-block (but note that the $a$ must then match the expected type of the whole block). Otherwise, $m$ is evaluated and its result is used to perform the above test, but the result is then discarded and not bound to a variable.
+\end{mdframed}
+
+\begin{mdframed}
+\textbf{Aside: Useful functions and types}\\
+If you are using the skeleton code, you may find the following functions and types useful. In particular, the $\mathit{Interpreter}$ module makes use of the $\mathit{Data.Map}$ module from the \texttt{containers} package, which implements dictionaries. The full documentation for this module may be found at
+
+\url{https://hackage.haskell.org/package/containers-0.5.7.1/docs/Data-Map-Lazy.html}
+
+but is imported as qualified and all function and type names are prefixed with $M.$ as a result. In particular, note that $\mathbf{type}~\mathit{GlEnv} = \mathit{M.Map}~\mathit{String}~\mathit{Addr}$ and $\mathbf{type}~\mathit{Heap} = \mathit{M.Map}~\mathit{Addr}~\mathit{Closure}$.
+
+\begin{mdframed}
+\begin{displaymath}
+\mathit{M.empty} :: \mathit{M.Map}~k~a
+\end{displaymath}
+$\mathit{M.empty}$ represents an empty dictionary.
+\end{mdframed}
+
+\begin{mdframed}
+\begin{displaymath}
+\mathit{M.size} :: \mathit{M.Map}~k~a \to \mathit{Int}
+\end{displaymath}
+$\mathit{M.size}~\mathit{dict}$ returns the number of entries in $\mathit{dict}$. $\mathcal{O}(1)$.
+\end{mdframed}
+
+\begin{mdframed}
+\begin{displaymath}
+\mathit{M.fromList} :: \mathit{Ord}~k \Rightarrow \hslist{(k, a)} \to \mathit{M.Map}~k~a 
+\end{displaymath}
+$\mathit{M.fromList}~\mathit{xs}$ converts a list of pairs to a dictionary. $\mathcal{O}(\log n)$.
+\end{mdframed}
+
+\begin{mdframed}
+\begin{displaymath}
+\mathit{M.insert} :: \mathit{Ord}~k \Rightarrow k \to a \to \mathit{M.Map}~k~a \to \mathit{M.Map}~k~a
+\end{displaymath}
+$\mathit{M.insert}~\mathit{key}~\mathit{val}~\mathit{dict}$ inserts a value $\mathit{val}$ with key $\mathit{key}$ into the dictionary $\mathit{dict}$. $\mathcal{O}(\log n)$.
+\end{mdframed}
+
+\begin{mdframed}
+\begin{displaymath}
+\mathit{M.union} :: \mathit{Ord}~k \Rightarrow \mathit{M.Map}~k~a \to \mathit{M.Map}~k~a \to \mathit{M.Map}~k~a
+\end{displaymath}
+$\mathit{M.union}~\mathit{d1}~\mathit{d2}$ calculates the left-biased union of $\mathit{d1}$ and $\mathit{d2}$. \emph{I.e.} it prefers $\mathit{d1}$ when duplicate keys are encountered. $\mathcal{O}(n + m)$.
+\end{mdframed}
+
+\begin{mdframed}
+\begin{displaymath}
+\mathit{M.lookup} :: \mathit{Ord}~k \Rightarrow k \to \mathit{M.Map}~k~a \to \mathit{Maybe}~a
+\end{displaymath}
+$\mathit{M.lookup}~\mathit{key}~\mathit{dict}$ looks up $\mathit{key}$ in $\mathit{dict}$. $\mathcal{O}(\log n)$.
+\end{mdframed}
+
+You may also find the following function useful:
+
+\begin{mdframed}
+\begin{displaymath}
+\mathit{mapM} :: (a \to \mathit{Maybe}~b) \to \hslist{a} \to \mathit{Maybe}~\hslist{b}
+\end{displaymath}
+$\mathit{mapM}~f~\mathit{xs}$ applies $f$ to every element in $\mathit{xs}$, but checks that $f$ was successful before proceeding to the next element. In other words, if $f$ fails for at least one element in $\mathit{xs}$, then $\mathit{mapM}$ also fails.
+\end{mdframed}
+
+Documentation for functions which deal with lists in Haskell may be found at:
+
+\url{http://hackage.haskell.org/package/base-4.8.2.0/docs/Data-List.html}
+
+Another useful resource is Hoogle, which you can use to search for things by name or type:
+
+\url{https://www.haskell.org/hoogle/}
+
+For example, if you wanted to find a function which returns the size of a list, but don't know its name, you could search for \texttt{[a] -> Int}.
+
+\end{mdframed}
+
+\question Thoroughly test your interpreter to ensure that all rules in the operational semantics have been implemented correctly, according to the specification in Appendix \ref{app:semantics}. Explain how you have tested your interpreter and why you are convinced that it is correct.
+\end{questions}
+
+\newpage
+\appendix
+\section{Appendix}
+
+\subsection{STG Language}
+
+\begin{figure}[h]
+\begin{mdframed}
+    \begin{displaymath}
+    \begin{array}{llcll}
+    \multicolumn{5}{c}{\begin{array}{cc}
+    \mathit{var} \in \texttt{[a-z][a-zA-Z0-9]*} & \mathit{ctr} \in \texttt{[A-Z][a-zA-Z0-9]*}
+    \end{array}}\\\\
+    \text{\bl{Program}} & \mathit{prog} & \bl{\to} & \mathit{binds} \\
+    \text{\bl{Bindings}} & \mathit{binds} & \bl{\to} & \mathit{var}_1 \terminal{ = } \mathit{lf}_1\terminal{;} \ldots \terminal{;} \mathit{var}_n \terminal{ = } \mathit{lf}_n\terminal{;} & \bl{n \ge 1}\\
+    \text{\bl{$\lambda$-forms}} & \mathit{lf} & \bl{\to} & \mathit{vars}_f~\terminal{\textbackslash} \pi~\mathit{vars}_a \terminal{ -> } \mathit{expr} \\
+    \text{\bl{Update flag}} & \pi & \bl{\to} & \terminal{u} & \text{\bl{Updatable}} \\
+    &     & \bl{\mid}     & \terminal{n} & \text{\bl{Not updatable}} \\
+    \text{\bl{Expression}} & \mathit{expr} & \bl{\to}  & \terminal{let}~\mathit{binds}~\terminal{in}~\mathit{expr} & \text{\bl{Local definition}} \\
+    &               & \bl{\mid} & \terminal{letrec}~\mathit{binds}~\terminal{in}~\mathit{expr} & \text{\bl{Local recursion}} \\
+    &               & \bl{\mid} & \terminal{case}~\mathit{expr}~\terminal{of}~\mathit{alts} & \text{\bl{Case expression}} \\
+    &               & \bl{\mid} & \mathit{var}~\mathit{atoms} & \text{\bl{Application}} \\
+    &               & \bl{\mid} & \mathit{constr}~\mathit{atoms} & \text{\bl{Saturated constructor}} \\
+    &               & \bl{\mid} & \mathit{prim}~\mathit{atoms} & \text{\bl{Saturated built-in operator}} \\
+    &               & \bl{\mid} & \mathit{literal}  \\
+    \text{\bl{Alternatives}} & \mathit{alts} & \bl{\to}  & \mathit{aalt}_1 \terminal{;} \ldots \terminal{;} \mathit{aalt}_n \terminal{;} \mathit{default} & \bl{n \ge 0} \text{ \bl{(Algebraic)}} \\
+    &               & \bl{\mid} & \mathit{palt}_1 \terminal{;} \ldots \terminal{;} \mathit{palt}_n \terminal{;} \mathit{default} & \bl{n \ge 0} \text{ \bl{(Primitive)}} \\
+    \text{\bl{Algebraic alt}} & \mathit{aalt} & \bl{\to}  & \mathit{constr}~\mathit{vars}~\terminal{->}~\mathit{expr} \\
+    \text{\bl{Primitive alt}} & \mathit{palt} & \bl{\to}  & \mathit{literal}~\terminal{->}~\mathit{expr} \\
+    \text{\bl{Default alt}} & \mathit{default} & \bl{\to}  & \mathit{var}~\terminal{->}~\mathit{expr} \\
+    &                  & \bl{\mid} & \terminal{default ->}~\mathit{expr}\\
+    \text{\bl{Literals}} & \mathit{literal} & \bl{\to}  & \terminal{0\#}~\bl{\mid}~\terminal{1\#}~\bl{\mid}~\ldots & \text{\bl{Primitive integers}}\\
+    \text{\bl{Primitive ops}} & \mathit{prim} & \bl{\to}  & \terminal{+\#}~\bl{\mid}~\terminal{-\#}~\bl{\mid}~\terminal{*\#}~\bl{\mid}~\terminal{/\#}  & \text{\bl{Primitive integer ops}}\\     
+    \text{\bl{Variable lists}} & \mathit{vars} & \bl{\to} & \terminal{\{}~\mathit{var}_1~\terminal{,} \ldots \terminal{,}~\mathit{var}_n~\terminal{\}} & \bl{n \ge 0}\\  
+    \text{\bl{Atom lists}} & \mathit{atoms} & \bl{\to} & \terminal{\{}~\mathit{atom}_1~\terminal{,} \ldots \terminal{,}~\mathit{atom}_n~\terminal{\}} & \bl{n \ge 0}\\ 
+    \text{\bl{Atoms}} & \mathit{atom}  & \bl{\to} & \mathit{var} ~\bl{\mid}~ \mathit{literal}            \\                        
+    \end{array}
+    \end{displaymath}
+    \caption{STG language}
+    \label{fig:stglang}
+\end{mdframed}
+\end{figure}
+
+\subsection{Operational Semantics}
+\label{app:semantics}
+
+Configurations of the Spineless Tagless G-Machine are six-tuples
+\begin{displaymath}
+\begin{array}{lcl}
+\mathit{Config} & = & \langle \mathit{code}, \mathit{as}, \mathit{rs}, \mathit{us}, \mathit{h}, \sigma \rangle 
+\end{array}
+\end{displaymath}
+where
+\begin{itemize}
+\item $\mathit{code}$ is the current ``instruction'' to be evaluated (see below)
+\item $\mathit{as}$ is the argument stack, which contains values (see below)
+\item $\mathit{rs}$ is the return stack, which contains continuations 
+\item $\mathit{us}$ is the update stack, which contains update frames 
+\item $h$ is the heap, which contains only closures 
+\item $\sigma$ is the global environment, which maps the names of global definitions to memory addresses 
+\end{itemize}
+
+\subsubsection{Addresses}
+
+Memory addresses $\mathit{a} \in \mathbb{N}$. Each location in memory can be occupied by exactly one closure.
+
+\subsubsection{Global Environment}
+
+The global environment $\sigma$ is a mapping of labels to memory addresses. In general, a program in the STG language is a collection of global definitions:
+\begin{displaymath}
+    \begin{array}{lcl}
+    g_0 & = & \mathit{vs}_0~\terminal{\textbackslash}\pi~\mathit{xs}_0~\terminal{->}~\mathit{e}_0 \\
+    \ldots \\
+    g_n & = & \mathit{vs}_n~\terminal{\textbackslash}\pi~\mathit{xs}_n~\terminal{->}~\mathit{e}_n \\
+    \end{array}
+\end{displaymath} 
+The corresponding global environment would be:
+\begin{displaymath}
+\begin{array}{lcl}
+\sigma & = & \set{g_0 \mapsto a_0, \ldots, g_n \mapsto a_n}
+\end{array}
+\end{displaymath}
+where $a_0 \ldots a_n$ are distinct memory addresses.
+
+\subsubsection{Values}
+
+\emph{Note: these aren't values in the operational semantics sense of the word, but rather different interpretations of integers in the operational semantics.}
+
+We distinguish between address values (pointers) and primitive integer values:
+\begin{center}
+\begin{tabular}{p{1cm}p{6cm}}
+$\mathit{Addr}~a$ & A memory address (pointer) \\
+$\mathit{Int}~n$  & A primitive integer value
+\end{tabular}
+\end{center}
+
+\subsubsection{Local Environments}
+
+A local environment $\rho$ is a mapping of variable names to values. Such environments are created as the result of local bindings (\emph{e.g.} \texttt{let} and \texttt{letrec} bindings).
+
+\subsubsection{Closures}
+
+A closure is a structure on the heap, consisting of an arbitrary complex $\lambda$-form and a collection of free variables. There is one closure for every global definition and additional closures will be allocated as a program is evaluated.
+
+\emph{Note: for the purpose of the interpreter, we never bother to remove closures from the heap and assume that there is an infinite amount of memory available.}
+
+\subsubsection{Heap}
+
+The heap $h$ is a mapping from memory address to closures. In general, a program in the STG language is a collection of global definitions:
+\begin{displaymath}
+    \begin{array}{lcl}
+    g_0 & = & \mathit{vs}_0~\terminal{\textbackslash}\pi~\mathit{xs}_0~\terminal{->}~\mathit{e}_0 \\
+    \ldots \\
+    g_n & = & \mathit{vs}_n~\terminal{\textbackslash}\pi~\mathit{xs}_n~\terminal{->}~\mathit{e}_n \\
+    \end{array}
+\end{displaymath} 
+The corresponding heap is:
+\begin{displaymath}
+\begin{array}{lcl}
+h & = & \begin{array}[t]{llclll}
+\{ & a_0 & \mapsto & (\mathit{vs}_0~\terminal{\textbackslash}\pi~\mathit{xs}_0~\terminal{->}~\mathit{e}_0) & \set{} & \\
+   &     & \ldots  &  \\
+   & a_n & \mapsto & (\mathit{vs}_n~\terminal{\textbackslash}\pi~\mathit{xs}_n~\terminal{->}~\mathit{e}_n) & \set{} & \}
+\end{array}
+\end{array}
+\end{displaymath}
+\emph{Note that global definitions shouldn't have free variables, so the collections of free variables for their closures on the heap are empty, indicated by the $\set{}$.}
+
+\subsubsection{Code}
+
+The code component of a configuration is one of the following states:
+\begin{center}
+\begin{tabular}{p{2.5cm}p{8cm}}
+$\mathit{Eval}~e~\rho$             & Evaluate the expression $e$ in the local environment $\rho$ and apply its value to the arguments on the argument stack. The expression $e$ can be an arbitrarily complex expression in the STG language. \\
+$\mathit{Enter}~a$                 & Apply the closure at address $a$ to the arguments on the argument stack. \\
+$\mathit{ReturnCon}~c~\mathit{vs}$ & Return the constructor $c$ applied to the values $\mathit{vs}$ to the continuation on the return stack. \\
+$\mathit{ReturnInt}~n$             & Return the primitive integer $n$ to the continuation on the return stack. 
+\end{tabular}
+\end{center}
+
+\subsubsection{The Stacks}
+
+There are three stacks in the STG machine.
+
+\begin{itemize}
+\item The argument stack 
+\item The return stack
+\item Whenever we encounter a lambda form whose update flag is set to \texttt{u}, \emph{i.e.} it can be updated, an \emph{update frame} is pushed onto the update stack. 
+\end{itemize}
+
+\subsubsection{Retriving the value of an atom}
+
+Before we start defining the transition rules for the Spineless Tagless G-Machine, let us first define a little helper function which allows us to retrieve the values associated with atoms (see \autoref{fig:stglang}). If the atom is a primitive integer, then the corresponding STG value is also just a primitive integer. If the atom is a variable and it is an element of the domain of the local environment $\rho$, then we return the value associated with it. Otherwise, we try to look up its value in the global environment $\sigma$:
+\begin{displaymath}
+\begin{array}{lcll}
+\mathit{val}~\rho~\sigma~\texttt{n} & = & \mathit{Int}~\texttt{n} & \\
+\mathit{val}~\rho~\sigma~\texttt{x} & = & \rho~\texttt{x}   & \text{if}~\texttt{x} \in \mathit{dom}(\rho) \\
+                                    &   & \sigma~\texttt{x} & \text{otherwise}
+\end{array}
+\end{displaymath}
+
+\subsubsection{Application}
+
+The first rule in the operational semantics concerns the application of some variable to some list of atoms. If we are in an $\mathit{Eval}$ state and the expression is of form $\mathit{f}~\mathit{xs}$ where $f$ is a variable, $\mathit{xs}$ is a list of atoms, and the value of $f$ is a memory address (see Rule \ref{eqn:varint} for the case where the value is an integer literal), then we push the values of the atoms in $\mathit{xs}$ onto the argument stack and move into an $\mathit{Enter}$ state for the closure represented by $f$:
+\begin{mdframed}
+\begin{equation}
+\begin{array}{cl}
+ & \langle \mathit{Eval}~(f~\mathit{xs})~\rho, \mathit{as}, \mathit{rs}, \mathit{us}, h, \sigma \rangle \\
+ & \mathbf{where}~\mathit{val}~\rho~\sigma~f = \mathit{Addr}~a\\[0.25cm]
+\Longrightarrow & \langle \mathit{Enter}~a, \overline{(\mathit{val}~\rho~\sigma~\mathit{xs})} \append \mathit{as}, \mathit{rs}, \mathit{us}, h, \sigma \rangle
+\end{array}
+\end{equation}
+\end{mdframed}
+The $\overline{\mathit{val}~\rho~\sigma~\mathit{xs}}$ notation is used to mean ``apply $\mathit{val}~\rho~\sigma$ to every element in the list $\mathit{xs}$''. The $\append$ operator is used to concatenate two lists.
+
+The second rule concerns entering a closure. For now, we will only consider \emph{non-updatable} closures. The rule for updatable closures is given in Appendix \ref{app:updates}.
+\begin{mdframed}
+\begin{equation}
+\begin{array}{cl}
+ & \langle \mathit{Enter}~a, \mathit{as}, \mathit{rs}, \mathit{us}, h[a \mapsto \mathit{vs}~\terminal{\textbackslash}\pi~\mathit{xs}~\terminal{->}~\mathit{e}], \sigma \rangle \\
+ & \mathbf{where}~\mathit{length}~\mathit{as} \geq \mathit{length}~\mathit{xs}\\[0.25cm]
+\Longrightarrow & \langle \mathit{Eval}~e~\rho, \mathit{as}', \mathit{rs}, \mathit{us}, h, \sigma \rangle \\
+ & \mathbf{where}~\begin{array}[t]{lcl}
+  \mathit{ws}_a \append \mathit{as'} & = & \mathit{as} \qquad \textbf{such that}~\mathit{length}~\mathit{ws}_a = \mathit{length}~\mathit{xs} \\
+  \rho & = & \hslist{\overline{\mathit{vs} \mapsto \mathit{ws}_f}, \overline{\mathit{xs} \mapsto \mathit{ws}_a}}
+  \end{array}
+\end{array}
+\end{equation}
+\end{mdframed}
+When a non-updatable closure is entered, the local environment $\rho$ is constructed by binding the $\lambda$-form's free variables, $\mathit{vs}$, to the values, $\mathit{ws}_f$, found in the closure. The arguments, $\mathit{xs}$, are bound to the values found on top of the argument stack, $\mathit{ws}_a$. The resulting configuration indicates that the body of the closure should be evaluated next.
+
+\subsubsection{\texttt{let(rec)} expressions}
+
+A \texttt{let} expression constructs closures for all of its bindings on the heap:
+\begin{mdframed}
+\begin{equation}
+\begin{array}{cl}
+ & \langle \mathit{Eval}~\left( \begin{array}{llcl}
+ \mathbf{let} & x_1 & = & \mathit{vs}_1~\terminal{\textbackslash}\pi_1~\mathit{xs}_1~\terminal{->}~\mathit{e}_1 \\
+              & \multicolumn{3}{l}{\ldots} \\
+              & x_n & = & \mathit{vs}_n~\terminal{\textbackslash}\pi_n~\mathit{xs}_n~\terminal{->}~\mathit{e}_n \\
+ \multicolumn{4}{l}{\mathbf{in}~e}
+ \end{array} \right)~\rho,\mathit{as},\mathit{rs},\mathit{us},h,\sigma \rangle \\[1.5cm]
+\Longrightarrow & \langle \mathit{Eval}~e~\rho', \mathit{as},\mathit{rs},\mathit{us},h',\sigma \rangle \\
+ & \mathbf{where}~\begin{array}[t]{lcl}
+ \rho' & = & \rho[x_1 \mapsto \mathit{Addr}~a_1, \ldots, x_n \mapsto \mathit{Addr}~a_n] \\
+ h' & = & h\left[\begin{array}{lcl}
+ a_1 & \mapsto & (\mathit{vs}_1~\terminal{\textbackslash}\pi_1~\mathit{xs}_1~\terminal{->}~\mathit{e}_1)~(\rho_{\mathit{rhs}~\mathit{vs}_1}) \\
+ \multicolumn{3}{l}{\ldots} \\
+ a_n & \mapsto & (\mathit{vs}_n~\terminal{\textbackslash}\pi_n~\mathit{xs}_n~\terminal{->}~\mathit{e}_n)~(\rho_{\mathit{rhs}~\mathit{vs}_n})
+ \end{array}\right] \\
+ \rho_{\mathit{rhs}} & = & \rho
+ \end{array}
+\end{array}
+\label{eqn:let}
+\end{equation}
+\end{mdframed}
+First, we construct a new local environment, $\rho'$, by extending $\rho$ with mappings for all the binding names, $x_1 \ldots x_n$, to fresh addresses, $a_1 \ldots a_n$ -- \emph{i.e.} ones that have not been used for anything else yet. Then we construct a new heap, $h'$, by extending the old heap, $h$, with closures for all bindings. The free variables of the bindings are resolved using $\rho_{\mathit{rhs}}$, which is the same as the old local environment, $\rho$ -- \emph{i.e.} it does not yet contain mappings for the bindings in this \texttt{let} expression.
+
+The rule for \texttt{letrec} is identical to Rule \ref{eqn:let}, except that $\rho_{\mathit{rhs}} = \rho'$ so that all bindings in the \texttt{letrec}-expression are in each others' scope:
+\begin{mdframed}
+\begin{equation}
+\begin{array}{cl}
+ & \langle \mathit{Eval}~\left( \begin{array}{llcl}
+ \mathbf{letrec} & x_1 & = & \mathit{vs}_1~\terminal{\textbackslash}\pi_1~\mathit{xs}_1~\terminal{->}~\mathit{e}_1 \\
+              & \multicolumn{3}{l}{\ldots} \\
+              & x_n & = & \mathit{vs}_n~\terminal{\textbackslash}\pi_n~\mathit{xs}_n~\terminal{->}~\mathit{e}_n \\
+ \multicolumn{4}{l}{\mathbf{in}~e}
+ \end{array} \right)~\rho,\mathit{as},\mathit{rs},\mathit{us},h,\sigma \rangle \\[0.25cm]
+\Longrightarrow & \langle \mathit{Eval}~e~\rho', \mathit{as},\mathit{rs},\mathit{us},h',\sigma \rangle \\
+ & \mathbf{where}~\begin{array}[t]{lcl}
+ \rho' & = & \rho[x_1 \mapsto \mathit{Addr}~a_1, \ldots, x_n \mapsto \mathit{Addr}~a_n] \\
+ h' & = & h\left[\begin{array}{lcl}
+ a_1 & \mapsto & (\mathit{vs}_1~\terminal{\textbackslash}\pi_1~\mathit{xs}_1~\terminal{->}~\mathit{e}_1)~(\rho_{\mathit{rhs}~\mathit{vs}_1}) \\
+ \multicolumn{3}{l}{\ldots} \\
+ a_n & \mapsto & (\mathit{vs}_n~\terminal{\textbackslash}\pi_n~\mathit{xs}_n~\terminal{->}~\mathit{e}_n)~(\rho_{\mathit{rhs}~\mathit{vs}_n})
+ \end{array}\right] \\
+ \rho_{\mathit{rhs}} & = & \rho'
+ \end{array}
+\end{array}
+\label{eqn:let}
+\end{equation}
+\end{mdframed}
+
+\subsubsection{Case expressions and data constructors}
+
+The return stack is used for the first time when we come to \texttt{case} expressions. Given the expression
+\begin{displaymath}
+\texttt{case}~e~\texttt{of}~\mathit{alts}
+\end{displaymath}
+the operational interpretation is ``push a continuation onto the return stack, and evaluate $e$''. When the evaluation of $e$ is complete, execution will resume at the continuation, which then decides which alternative to execute. The rule for \texttt{case} follows fairly directly:
+\begin{mdframed}
+\begin{equation}
+\begin{array}{cl}
+ & \langle \mathit{Eval}~(\texttt{case}~e~\texttt{of}~\mathit{alts})~\rho, \mathit{as}, \mathit{rs}, \mathit{us}, h, \sigma \rangle \\[0.25cm]
+\Longrightarrow & \langle \mathit{Eval}~e~\rho, \mathit{as}, (\mathit{alts}, \rho) : \mathit{rs}, \mathit{us}, h, \sigma \rangle 
+\end{array}
+\end{equation}
+\end{mdframed}
+The continuation is a pair $(\mathit{alts}, \rho)$; the alternatives $\mathit{alts}$ say what to do when evaluation of $e$ completes, while the local environment $\rho$ provides the context in which to evaluate the chosen alternative. 
+
+The other side of the coin is the rules for constructors and literals. Presumably, $e$ eventually evaluates to either a constructor or a literal, at which point the continuation must be popped from the return stack and executed. The rules for constructors and literals each use an intermediate state, $\mathit{ReturnCon}$ and $\mathit{ReturnInt}$ respectively, just as the rule for function application uses $\mathit{Enter}$. Primitive values are dealt with in the next section, while the rules for constructors are given next.
+
+Evaluating a constructor application simply moves into the $\mathit{ReturnCon}$ state:
+\begin{mdframed}
+\begin{equation}
+\begin{array}{cl}
+ & \langle \mathit{Eval}~(c~\mathit{xs})~\rho, \mathit{as}, \mathit{rs}, \mathit{us}, h, \sigma \rangle \\[0.25cm]
+\Longrightarrow & \langle \mathit{ReturnCon}~c~(\overline{\mathit{val}~\rho~\sigma~\mathit{xs}}), \mathit{as}, \mathit{rs}, \mathit{us}, h, \sigma \rangle 
+\end{array}
+\end{equation}
+\end{mdframed}
+The rules for $\mathit{ReturnCon}$ return to the appropriate continuation, taken from the return stack:
+\begin{mdframed}
+\begin{equation}
+\begin{array}{cl}
+ & \langle \mathit{ReturnCon}~c~\mathit{ws}, \mathit{as},  (\ldots \texttt{;} c~\mathit{vs}~\texttt{->}~e \texttt{;} \ldots, \rho) : \mathit{rs}, \mathit{us}, h, \sigma \rangle \\[0.25cm]
+\Longrightarrow & \langle \mathit{Eval}~e~\rho[\overline{\mathit{vs} \mapsto \mathit{ws}}], \mathit{as}, \mathit{rs}, \mathit{us}, h, \sigma \rangle
+\end{array}
+\label{eq:ctrmatch}
+\end{equation}
+\end{mdframed}
+Provided that the continuation on the return stack contains a pattern $c~\mathit{vs}$ whose constructor $c$ is the same as that being evaluated, we just evaluate the right-hand side of that alternative, $e$, in the saved local environment, $\rho$, augmented with bindings for the pattern variables, $\mathit{vs}$, to the values of the actual arguments to $c$, represented by $\mathit{ws}$.
+
+If there is no such alternative in the continuation on top of the return stack, then the default alternative is taken. If the default alternative does not bind a variable, then the rule is easy:
+\begin{mdframed}
+\begin{equation}
+\begin{array}{cl}
+ & \langle \mathit{ReturnCon}~c~\mathit{ws}, \mathit{as}, \left(\begin{array}{lcl}
+ c_1~\mathit{vs}_1 & \texttt{->} & e_1 \texttt{;} \\
+ \multicolumn{3}{l}{\ldots \texttt{;}} \\
+ c_n~\mathit{vs}_n & \texttt{->} & e_n \texttt{;} \\
+ \texttt{default} & \texttt{->} & e_d
+ \end{array}, \rho\right) : \mathit{rs}, \mathit{us}, h, \sigma \rangle \\
+ & \mathbf{where}~\forall i \in \mathbb{N}~\text{such that}~1 \leq i \leq n, c \neq c_i \\[0.25cm]
+\Longrightarrow & \langle \mathit{Eval}~e_d~\rho, \mathit{as}, \mathit{rs}, \mathit{us}, h, \sigma \rangle
+\end{array}
+\end{equation}
+\end{mdframed}
+We simply move to a state where the expression on the right-hand side of the default alternative, $e_d$, is the next expression to evaluate.
+
+However, if the default alternative binds a variable $v$, we need to allocate a constructor closure on the heap. We do this by extending the local environment with a mapping for $v$ to the address of a new closure, containing a $\lambda$-form whose free variables are the constructor's arguments and whose body is the constructor $c$ applied to those variables. That closure is then added to the old heap, $h$, to form a new heap, $h'$: 
+\begin{mdframed}
+\begin{equation}
+\begin{array}{cl}
+ & \langle \mathit{ReturnCon}~c~\mathit{ws}, \mathit{as}, \left(\begin{array}{lcl}
+ c_1~\mathit{vs}_1 & \texttt{->} & e_1 \texttt{;} \\
+ \multicolumn{3}{l}{\ldots \texttt{;}} \\
+ c_n~\mathit{vs}_n & \texttt{->} & e_n \texttt{;} \\
+ v & \texttt{->} & e_d
+ \end{array}, \rho\right) : \mathit{rs}, \mathit{us}, h, \sigma \rangle \\
+ & \mathbf{where}~\forall i \in \mathbb{N}~\text{such that}~1 \leq i \leq n, c \neq c_i \\[0.25cm]
+\Longrightarrow & \langle \mathit{Eval}~e_d~\rho[v \mapsto a], \mathit{as}, \mathit{rs}, \mathit{us}, h', \sigma \rangle\\
+ & \mathbf{where}~\begin{array}[t]{l}
+ h' = h[a \mapsto (\mathit{vs}~\terminal{\textbackslash}\texttt{n}~\texttt{\set{}}~\terminal{->}~\mathit{c}~\mathit{vs})~\mathit{ws}] \\
+ \mathit{vs}~\text{is a sequence of arbitrary, distinct variables} \\
+ \mathit{length}~\mathit{vs} = \mathit{length}~\mathit{ws}
+ \end{array}
+\end{array}
+\end{equation}
+\end{mdframed}
+
+\subsubsection{Built-in operations}
+
+In this section we give the extra rules which handle primitive values. The rule for evaluating a primitive literal, $k$, enters the $\mathit{ReturnInt}$ state:
+\begin{mdframed}
+\begin{equation}
+\begin{array}{cl}
+ & \langle \mathit{Eval}~k~\rho, \mathit{as}, \mathit{rs}, \mathit{us}, h, \sigma \rangle \\[0.25cm]
+\Longrightarrow & \langle \mathit{ReturnInt}~k, \mathit{as}, \mathit{rs}, \mathit{us}, h, \sigma \rangle 
+\end{array}
+\end{equation}
+\end{mdframed}
+A similar rule deals with the case where a variable bound to a primitive value is entered:
+\begin{mdframed}
+\begin{equation}
+\begin{array}{cl}
+ & \langle \mathit{Eval}~(f~\texttt{\set{}})~\rho[f \mapsto \mathit{Int}~k], \mathit{as}, \mathit{rs}, \mathit{us}, h, \sigma \rangle \\[0.25cm]
+\Longrightarrow & \langle \mathit{ReturnInt}~k, \mathit{as}, \mathit{rs}, \mathit{us}, h, \sigma \rangle 
+\end{array}
+\label{eqn:varint}
+\end{equation}
+\end{mdframed}
+Next come the rules for the $\mathit{ReturnInt}$ state, which look for a continuation on the return stack. First, the case where there is an alternative which matches the literal (this corresponds to Rule \ref{eq:ctrmatch} for constructors):
+\begin{mdframed}
+\begin{equation}
+\begin{array}{cl}
+ & \langle \mathit{ReturnInt}~k, \mathit{as}, (\ldots \texttt{;} k~\texttt{->}~e \texttt{;} \ldots, \rho) : \mathit{rs}, \mathit{us}, h, \sigma \rangle \\[0.25cm]
+\Longrightarrow & \langle \mathit{Eval}~e~\rho, \mathit{as}, \mathit{rs}, \mathit{us}, h, \sigma \rangle 
+\end{array}
+\end{equation}
+\end{mdframed}
+Next, the cases where the default alternative is taken:
+\begin{mdframed}
+\begin{equation}
+\begin{array}{cl}
+ & \langle \mathit{ReturnInt}~k, \mathit{as}, \left(\begin{array}{lcl}
+ k_1 & \texttt{->} & e_1 \texttt{;} \\
+ \multicolumn{3}{l}{\ldots \texttt{;}} \\
+ k_n & \texttt{->} & e_n \texttt{;} \\
+ x & \texttt{->} & e_d
+ \end{array}, \rho\right) : \mathit{rs}, \mathit{us}, h, \sigma \rangle \\
+ & \mathbf{where}~\forall i \in \mathbb{N}~\text{such that}~1 \leq i \leq n, k \neq k_i \\[0.25cm]
+\Longrightarrow & \langle \mathit{Eval}~e_d~\rho[x \mapsto \mathit{Int}~k], \mathit{as}, \mathit{rs}, \mathit{us}, h, \sigma \rangle
+\end{array}
+\end{equation}
+\end{mdframed}
+\begin{mdframed}
+\begin{equation}
+\begin{array}{cl}
+ & \langle \mathit{ReturnInt}~k, \mathit{as}, \left(\begin{array}{lcl}
+ k_1 & \texttt{->} & e_1 \texttt{;} \\
+ \multicolumn{3}{l}{\ldots \texttt{;}} \\
+ k_n & \texttt{->} & e_n \texttt{;} \\
+ \texttt{default} & \texttt{->} & e_d
+ \end{array}, \rho\right) : \mathit{rs}, \mathit{us}, h, \sigma \rangle \\
+ & \mathbf{where}~\forall i \in \mathbb{N}~\text{such that}~1 \leq i \leq n, k \neq k_i \\[0.25cm]
+\Longrightarrow & \langle \mathit{Eval}~e_d~\rho, \mathit{as}, \mathit{rs}, \mathit{us}, h, \sigma \rangle
+\end{array}
+\end{equation}
+\end{mdframed}
+Finally, we need a family of rules for built-in arithmetic operations which, for each binary built-in operation $\oplus$ have the form:
+\begin{mdframed}
+\begin{equation}
+\begin{array}{cl}
+ & \langle \mathit{Eval}~(\oplus~\texttt{\set{$x_1\texttt{,} x_2$}})~\rho[x_1 \mapsto \mathit{Int}~i_1, x_2 \mapsto \mathit{Int}~i_2], \mathit{as}, \mathit{rs}, \mathit{us}, h, \sigma \rangle \\[0.25cm]
+\Longrightarrow & \langle \mathit{ReturnInt}~(i_1 \oplus i_2)~\rho, \mathit{as}, \mathit{rs}, \mathit{us}, h, \sigma \rangle 
+\end{array}
+\end{equation}
+\end{mdframed}
+The $\oplus$ symbol is used to mean one of \texttt{+\#}, \texttt{-\#}, \texttt{*\#}, or \texttt{/\#} as well as the corresponding arithmetic operators, respectively.
+
+\subsubsection{Updates}
+\label{app:updates}
+
+Updates happen in two stages:
+\begin{enumerate}
+\item When an updatable closure is entered, it pushes an \emph{update frame} onto the update stack, and makes the argument and return stacks empty. An update frame is a triple $(\mathit{as}_u, \mathit{rs}_u, a_u)$, consisting of:
+\begin{itemize}
+\item $\mathit{as}_u$, the previous argument stack;
+\item $\mathit{rs}_u$, the previous return stack;
+\item $a_u$, the pointer to the closure being entered, and which should later be updated.
+\end{itemize}
+\item When evaluation of the closure is complete, an update is triggered. This can happen in one of two ways:
+\begin{itemize}
+\item If the value of the closure is a data constructor or literal, an attempt will be made to pop a continuation from the return stack, which will fail because the return stack is empty. This failure triggers an update.
+\item If the value of the closure is a function, the function will attempt to bind arguments which are not present on the argument stack, because they were moved into the update frame. This failure to find enough arguments triggers an update.
+\end{itemize}
+\end{enumerate}
+If we attempt to enter a closure whose update flag is set to \texttt{u} to indicate that it can be updated, we push an update frame onto the update stack:
+\begin{mdframed}
+\begin{equation}
+\begin{array}{cl}
+ & \langle \mathit{Enter}~a, \mathit{as}, \mathit{rs}, \mathit{us}, h[a \mapsto (\mathit{vs}~\terminal{\textbackslash}\terminal{u}~\set{}~\terminal{->}~\mathit{e})~\mathit{ws}], \sigma \rangle \\[0.25cm]
+\Longrightarrow & \langle \mathit{Eval}~e~\rho, \set{}, \set{}, (\mathit{as},\mathit{rs},a) : \mathit{us}, h, \sigma \rangle \\
+ & \mathbf{where}~\begin{array}[t]{lcl}
+ \rho & = & \hslist{\mathit{vs}_0 \mapsto \mathit{ws}_0, \ldots, \mathit{vs}_n \mapsto \mathit{ws}_n}
+ \end{array}
+\end{array}
+\end{equation}
+\end{mdframed}
+Next, we need rules for constructors which see an empty return stack. When this happens, they update the closure pointed to by the update frame, restore the argument and return stacks from the update frame, and try again. It may be that the restored return stack contains the continuation, but it too may be empty, in which case a second update is performed, and so on until the continuation is exposed:
+\begin{mdframed}
+\begin{equation}
+\begin{array}{cl}
+ & \langle \mathit{ReturnCon}~c~\mathit{ws}, \set{}, \set{}, (\mathit{as}_u, \mathit{rs}_u, a_u) : \mathit{us}, h, \sigma \rangle \\[0.25cm]
+\Longrightarrow & \langle \mathit{ReturnCon}~c~\mathit{ws}, \mathit{as}_u, \mathit{rs}_u, \mathit{us}, h_u, \sigma \rangle \\
+ & \mathbf{where}~\begin{array}[t]{lcl}
+ \multicolumn{3}{l}{\mathit{vs}~\text{is a sequence of arbitrary, distinct variables}} \\
+ \multicolumn{3}{l}{\mathit{length}~\mathit{vs} = \mathit{length}~\mathit{ws}} \\
+ h_u & = & h[a_u \mapsto (\mathit{vs}~\terminal{\textbackslash}\texttt{n}~\set{}~\terminal{->}~\mathit{e}~\mathit{vs})~\mathit{ws}]
+ \end{array}
+\end{array}
+\end{equation}
+\end{mdframed}
+The closured to be updated at address $a_u$ is just updated with a standard constructor closure. Only a rule for $\mathit{ReturnCon}$ needs to be given. It is not possible for the $\mathit{ReturnInt}$ state to see an empty return stack, because that would imply that a closure should be updated with a primitive value, but no closure has a primitive type.
+
+Finally, we need a rule to handle the case where there are not enough arguments on the stack to be bound by a $\lambda$-abstraction ($\mathit{length}~\mathit{as} < \mathit{length}~\mathit{xs}$), which triggers an update:
+%Note that the pre-condition for this rule is the same as for Rule \ref{}, but with $\mathit{length}~\mathit{as} < \mathit{length}~\mathit{xs}$: 
+\begin{mdframed}
+\begin{equation}
+\begin{array}{cl}
+ & \langle \mathit{Enter}~a, \mathit{as}, \set{}, (\mathit{as}_u, \mathit{rs}_u, a_u) : \mathit{us}, h[a \mapsto \mathit{vs}~\terminal{\textbackslash}\terminal{n}~\mathit{xs}~\terminal{->}~\mathit{e}], \sigma \rangle \\
+ & \mathbf{where}~\mathit{length}~\mathit{as} < \mathit{length}~\mathit{xs}\\[0.25cm]
+\Longrightarrow & \langle \mathit{Enter}~a, \mathit{as} \append \mathit{as}_u, \mathit{rs}_u, \mathit{us}, h_u, \sigma \rangle \\
+ & \mathbf{where}~\begin{array}[t]{lcl}
+ \mathit{xs}_1 \append \mathit{xs}_2 & = & xs \qquad \textbf{such that}~\mathit{length}~\mathit{xs}_1 = \mathit{length}~\mathit{as} \\
+ h_u & = & h[a_u \mapsto (\mathit{vs} \append \mathit{xs}_1)~\terminal{\textbackslash}\terminal{n}~\mathit{xs}_2~\terminal{->}~e)~(\mathit{ws}_f \append \mathit{as})]
+ \end{array}
+\end{array}
+\end{equation}
+\end{mdframed}
+
+{\tiny If you have made it this far, you must truly be the pride of [INSERT SUBJECT HOMETOWN HERE]. Cake and grief counselling will be available at the end of the supervision.}
+
+\end{document}

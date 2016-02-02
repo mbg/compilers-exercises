@@ -139,7 +139,7 @@ In this exercise, we will attach an operational semantics to the STG language an
     \begin{array}{l}
     \mathbf{let}~\mathbf{rec}~\mathit{fib}~n = \\
     \quad \mathbf{if}~n=0 \\
-    \quad \mathbf{then}~1 \\
+    \quad \mathbf{then}~0 \\
     \quad \mathbf{else}~\mathbf{if}~n=1 \\
     \qquad \mathbf{then}~1 \\
     \qquad \mathbf{else}~\mathit{fib}(n-1) + \mathit{fib}(n-2)
@@ -160,7 +160,7 @@ In this exercise, we will attach an operational semantics to the STG language an
     \textbf{OCaml} & \begin{array}{l}
     \mathbf{let}~\mathbf{rec}~\mathit{fib\_cps}~(n,k) = \\
     \quad \mathbf{if}~n=0 \\
-    \quad \mathbf{then}~k~1 \\
+    \quad \mathbf{then}~k~0 \\
     \quad \mathbf{else}~\mathbf{if}~n=1 \\
     \qquad \mathbf{then}~k~1 \\
     \qquad \mathbf{else}~\mathit{fib}\_cps(n-1, \lambda a \to \mathit{fib\_cps}(n-2, \lambda b \to k~(a+b))) 

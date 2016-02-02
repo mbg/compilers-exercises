@@ -920,7 +920,7 @@ Finally, we need a rule to handle the case where there are not enough arguments 
 \Longrightarrow & \langle \mathit{Enter}~a, \mathit{as} \append \mathit{as}_u, \mathit{rs}_u, \mathit{us}, h_u, \sigma \rangle \\
  & \mathbf{where}~\begin{array}[t]{lcl}
  \mathit{xs}_1 \append \mathit{xs}_2 & = & xs \qquad \textbf{such that}~\mathit{length}~\mathit{xs}_1 = \mathit{length}~\mathit{as} \\
- h_u & = & h[a_u \mapsto (\mathit{vs} \append \mathit{xs}_1)~\terminal{\textbackslash}\terminal{n}~\mathit{xs}_2~\terminal{->}~e)~(\mathit{ws}_f \append \mathit{as})]
+ h_u & = & h[(a_u \mapsto (\mathit{vs} \append \mathit{xs}_1)~\terminal{\textbackslash}\terminal{n}~\mathit{xs}_2~\terminal{->}~e)~(\mathit{ws}_f \append \mathit{as})]
  \end{array}
 \end{array}
 \end{equation}

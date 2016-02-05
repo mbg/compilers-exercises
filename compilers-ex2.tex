@@ -260,7 +260,7 @@ foo = {} \n {xs,ys} -> let zs = {xs,ys} \u {} -> zip {xs,ys};
     \begin{center}
         \begin{tabular}{lcl}
             \texttt{succ} & \texttt{=} & \texttt{\{\} \textbackslash n \{x\} -> +\# \{x, 1\#\}}\\
-            \texttt{list} & \texttt{=} & \texttt{\{\} \textbackslash n \{\} -> Cons \{5\#, Nil\}}\\
+            \texttt{list} & \texttt{=} & \texttt{\{\} \textbackslash n \{\} -> let nil = \{\} \textbackslash n \{\} -> Nil \{\} in Cons \{5\#, nil\}}\\
             \texttt{map} & \texttt{=} & \texttt{\{\} \textbackslash n \{f,xs\} ->} \\
             &   & \quad \texttt{case xs \{\} of} \\
             &   & \quad \begin{tabular}[t]{lcl}
@@ -903,7 +903,7 @@ Next, we need rules for constructors which see an empty return stack. When this 
  & \mathbf{where}~\begin{array}[t]{lcl}
  \multicolumn{3}{l}{\mathit{vs}~\text{is a sequence of arbitrary, distinct variables}} \\
  \multicolumn{3}{l}{\mathit{length}~\mathit{vs} = \mathit{length}~\mathit{ws}} \\
- h_u & = & h[a_u \mapsto (\mathit{vs}~\terminal{\textbackslash}\texttt{n}~\set{}~\terminal{->}~\mathit{e}~\mathit{vs})~\mathit{ws}]
+ h_u & = & h[a_u \mapsto (\mathit{vs}~\terminal{\textbackslash}\texttt{n}~\set{}~\terminal{->}~\mathit{c}~\mathit{vs})~\mathit{ws}]
  \end{array}
 \end{array}
 \end{equation}

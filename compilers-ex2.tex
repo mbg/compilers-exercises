@@ -260,7 +260,7 @@ foo = {} \n {xs,ys} -> let zs = {xs,ys} \u {} -> zip {xs,ys};
     \begin{center}
         \begin{tabular}{lcl}
             \texttt{succ} & \texttt{=} & \texttt{\{\} \textbackslash n \{x\} -> +\# \{x, 1\#\}}\\
-            \texttt{list} & \texttt{=} & \texttt{\{\} \textbackslash n \{\} -> Cons \{5\#, Nil\}}\\
+            \texttt{list} & \texttt{=} & \texttt{\{\} \textbackslash n \{\} -> let nil = \{\} \textbackslash n \{\} -> Nil \{\} in Cons \{5\#, nil\}}\\
             \texttt{map} & \texttt{=} & \texttt{\{\} \textbackslash n \{f,xs\} ->} \\
             &   & \quad \texttt{case xs \{\} of} \\
             &   & \quad \begin{tabular}[t]{lcl}

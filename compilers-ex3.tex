@@ -1,0 +1,444 @@
+\documentclass[10pt,a4paper]{exam} % turn it into a class! 
+\usepackage[latin1]{inputenc}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{titlesec}
+\usepackage{hyperref}
+\usepackage{fancyeq}
+\usepackage{tikz}
+%\usepackage{tikz-uml}
+\usepackage{mathpartir}
+\usetikzlibrary{matrix,decorations.pathmorphing,shapes,arrows,backgrounds,positioning}
+\usepackage{graphicx,xcolor}
+\usepackage{geometry}
+\usepackage{everysel}
+\usepackage[normalem]{ulem}
+\usepackage{mdframed}
+\usepackage{drawstack}
+
+\tikzset{
+  treenode/.style = {align=center, inner sep=0pt, text centered,
+    font=\sffamily},
+  arn_n/.style = {treenode, circle, black, font=\sffamily\bfseries, draw=black,
+    fill=white, text width=1.5em},% arbre rouge noir, noeud noir
+  arn_r/.style = {treenode, circle, red, draw=red, 
+    text width=1.5em, very thick},% arbre rouge noir, noeud rouge
+  arn_x/.style = {treenode, rectangle, draw=black,
+    minimum width=0.5em, minimum height=0.5em}% arbre rouge noir, nil
+}
+
+\usepackage[sc]{mathpazo}
+\linespread{1.05}         % Palatino needs more leading (space between lines)
+\usepackage[T1]{fontenc}
+
+% some format settings
+% for hard-bound final submission, use:
+%\setlength{\oddsidemargin}{4.6mm}     % 30 mm left margin - 1 in
+% for soft-bound version and techreport, use instead:
+
+\setlength{\oddsidemargin}{-0.4mm}    % 25 mm left margin - 1 in
+\setlength{\evensidemargin}{\oddsidemargin}
+\setlength{\topmargin}{-5.4mm}        % 20 mm top margin - 1 in
+\setlength{\textwidth}{160mm}         % 20/25 mm right margin
+\setlength{\textheight}{237mm}        % 20 mm bottom margin
+\setlength{\headheight}{5mm}
+\setlength{\headsep}{5mm}
+\setlength{\parindent}{0mm}
+\setlength{\parskip}{\medskipamount}
+\renewcommand\baselinestretch{1.2} % thesis format (not needed for techreport)
+% don't let large figures hijack entire pages
+\renewcommand\topfraction{.9}
+\renewcommand\textfraction{.1}
+\renewcommand\floatpagefraction{.8}
+
+\pagestyle{headandfoot}
+%\pointsinrightmargin
+%\pointname{ marks}
+%\marginpointname{ marks}
+
+\marksnotpoints 
+
+\definecolor{campurple}{HTML}{862D91} 
+\definecolor{campurpledark}{HTML}{2A185C}
+
+\hypersetup{  
+  urlcolor=campurple,
+  linkcolor=campurple,
+  colorlinks=true  
+}
+
+\titlelabel{\llap{\thetitle\quad}}
+
+\newcommand {\lbrac} {\makebox[0pt]{[\kern-1ex[}}
+\newcommand {\rbrac} {\makebox[0pt]{]\kern-1ex]}}
+\newcommand{\denote}[1]{\lbrac~#1~\rbrac}
+
+
+\def\mystrut(#1,#2){\vrule height #1pt depth #2pt width 0pt} 
+
+\titlespacing*{\section}{0pt}{0pt}{0pt}
+
+
+\begin{document}
+
+\newcommand{\course}{Compiler\\[-0.4cm]Construction}
+\newcommand{\week}{III}
+
+\everymath{\color{campurpledark}}
+\everydisplay{\color{campurpledark}}
+
+%\vspace{15pt}
+
+%\begin{center}
+%\emph{Complete SECTION 1 and ONE other section.}
+%\end{center}
+
+%\begin{center}
+%\emph{Answer SECTION 1 and TWO other sections.}
+%\end{center}
+
+\marksnotpoints
+\pointsdroppedatright
+\marksnotpoints
+\marginpointname{ \points}
+
+\begin{center}
+\LARGE {\textbf{\color{campurpledark} \course} }\\[-0.2cm]
+\Large \color{campurpledark} Supervision \week: C Strikes Back\\
+\end{center}
+
+{\color{campurple}\hrule}
+
+\newcommand{\metavar}[1]{{\color{campurple}#1}}
+
+\vspace{0.5cm}
+
+\newcommand{\terminal}[1]{\texttt{\color{campurple}#1}}
+\newcommand{\bl}[1]{{\color{black}#1}}
+
+%\section*{Introduction}
+
+\begin{center}
+\parbox[c]{340pt}{
+A long time ago in a supervision far, far away... \\
+
+In the previous exercises, we have tied theory from Semantics in Programming Languages and practice from Compiler Construction together: first, we defined a formal grammar for the STG language and implemented a lexer and parser for it. Then, we specified an operational semantics for the language and implemented it in an interpreter. \\
+
+This exercise is all about the translation from one language to another; specifically, we will be coverting programs in the STG language to C source code. We choose C instead of assembly for portability, so that our programs will run on a range of different CPU architectures. \\
+
+The easiest way to translate from one language to another is to simply generate an interpreter for the source language in the target language. However, more efficient code generators will make use of as many of the target language's built-in features as possible...
+}
+\end{center}
+
+\section*{Exercises}
+
+\begin{questions}
+\question
+\begin{parts}
+    \part What is a program counter?
+	\part What are calling conventions needed for? Illustrate your answer using an example in pseudo assembly code.
+	\part Why do most calling conventions involve a stack? Could you come up with a calling convention which does not require a stack? What limitations would there be?  
+	\part Explain the difference between calling conventions and evaluation strategies.  
+	\part A student at another university is writing a compiler and, for portability reasons, decides to target C instead of some assembly language. The student recently learned about Continuation-Passing Style. Most excited about the prospect of only having tail calls, the student designed functions in the source language to always be in CPS form. The calling convention for the language is straight-forward: arguments, including continuations, are pushed onto an argument stack before control flow jumps to a continuation. For ``convenience'', the student defines the following macro in C which, if given the memory address of a continuation, jumps to it:
+	\begin{verbatim}
+	#define JUMP(x) (*x)()
+	\end{verbatim}
+	A typical function, with no arguments except for the continuation, then looks as shown below:
+	\begin{verbatim}
+	void foo() {
+	  void* cont = *Stack--; // pop continuation off the stack
+	  // code for foo
+	  JUMP(&cont); // cont is the continuation
+	}
+	\end{verbatim}
+	Explain potential pitfalls with this implementation of CPS. You should assume that the C compiler will not perform any optimisations.
+	\part After hearing your answer to the previous question, the student reconsiders the implementation of CPS and instead changes the signatures of all generated C functions to \emph{e.g.}:
+	\begin{verbatim}
+	void* foo();
+	\end{verbatim}
+	The student also changes the \texttt{JUMP} macro to:
+	\begin{verbatim}
+	#define JUMP(x) return(x)
+	\end{verbatim}
+	Finally, the student implements the following:
+	\begin{verbatim}
+	int main(int argc, char** argv) {
+	  void* cont = &foo;
+	  while(1) { cont = (*cont)(); }
+	  return 0;
+	}
+	\end{verbatim}
+	Explain why this approach is better than the previous one. 
+	\part If the student were to choose an assembly language as the target language for the compiler, how would you implement CPS then? 
+\end{parts}
+\question The student from the previous question moves on to the implementation of local functions. While the code for local functions can be generated at compile-time, the corresponding closures must be allocated dynamically at runtime.  
+\begin{parts}
+	\part Show how you would represent closures in a low-level systems language, such as C, and explain your answer. You may assume that all free variables are pointers to other closures. 
+	\part Suppose that the student implements his heap as a simple array of some fixed size, \texttt{HEAP\_SIZE}, where each location in the array provides space for exactly one word. There is also a global variable which points to the next free location in the heap. How would you allocate $k$ words on this heap? 
+	\part How would you implement a test for whether there is free space on the heap?
+	\part Suppose that a local binding \texttt{fy} has a corresponding C function named \texttt{fy\_entry} which captures two free variables. Show how you would allocate the corresponding closure and how you would initialise it, assuming that pointers to the closures for the two free variables are available in local variables named \texttt{f} and \texttt{y}.
+	\part The process of evaluating (``entering'') a closure involves jumping to the memory address indicated by the code pointer of a closure and pushing any arguments onto the stack. How would the code generated for the closure find the free variables? How would it find the arguments?    
+\end{parts}
+\end{questions}
+
+\section*{Practical Exercises}
+
+For the practical exercises, we will implement the code generation component of a compiler from a typed STG language (shown in \autoref{fig:stglang}) to C.
+
+\begin{mdframed}
+\textbf{Skeleton Code}\\
+A new skeleton code is available for this exercise. There have been substantial changes to the code, so it is unlikely that you will be able to merge it into your existing repository. The code is available as the \texttt{supervision3} branch on the \texttt{mbg/compconstr-code} repository. Note that the \texttt{supervision3} branch \textbf{does} include answers to the previous exercises. The new branch also includes changes to the lexer/parser to account for the types, as well as the type inference algorithm. You don't have to worry about any of this, though.
+\begin{verbatim}
+$ git clone https://github.com/mbg/compconstr-code
+$ git pull origin supervision3
+\end{verbatim}
+You should not encounter any merge errors. Proceed by setting up a sandbox and installing the dependencies into it:
+\begin{verbatim}
+$ cabal sandbox init
+$ cabal install --only-dependencies
+$ cabal configure
+\end{verbatim}
+Once the new dependencies have been installed, verify that the program compiles successfully (repeat this step whenever you wish to re-compile the compiler):
+\begin{verbatim}
+$ cabal build
+\end{verbatim}
+If successful, this should create an executable in the \texttt{./dist/build/stg/} directory. A range of new examples have been added to the \texttt{./tests/codegen/} directory. You can turn them into executables by running the \texttt{make} command:
+\begin{verbatim}
+$ cd /tests/codegen/example1/
+$ make
+\end{verbatim} 
+Initially, the executables for most of these examples will not do the right thing when run. As you complete the exercises below, more and more of the example programs should work as intended.
+\end{mdframed}
+
+\begin{questions}
+\question Warmup: to get started, we will make the program in the \texttt{example1} folder compile. Open the \texttt{./src/CodeGen.hs} file, which contains the parts of the code generator you will need to modify / implement, and find the definition of the $\mathit{compExpr}$ function. Scroll down all the way to the bottom of the file to the case for primitive literals -- this corresponds to $\mathit{ReturnInt}$ state of the machine:
+\begin{verbatim}
+compExpr (LitE v _) = do
+    -- pop the continuation off the pointer stack
+    k <- loadLocalFromStack ValStk 0 "_k" (MonoTy $ AlgTy "_Cont")
+    adjustStack ValStk (-1)
+
+    -- set the return register value
+    -- returnVal v
+
+    -- jump to the continuation
+    jump k
+\end{verbatim}
+Some silly academic has commented out the line which stores the value of the literal in the \texttt{Ret} register (see Appendix \ref{app:registers}), because apparently the code generator part became irrelevant after he implemented a working type checker. Anyway, the $\mathit{returnVal}$ function of type $\mathit{PrimInt} \to \mathit{CodeGenFn}~()$ is part of a sort-of domain specific language (largely defined in \texttt{src/AbstractC.hs}) which you can use to generate C code without having to manually spell out C syntax.
+
+Uncomment the line and compile your compiler with \texttt{cabal build}. Once you have successfully compiled the compiler, navigate to the \texttt{./tests/codegen/example1} folder and run \texttt{make}. This should produce an executable named \texttt{a} and a source file named \texttt{Prim.c} in the same folder. Run \texttt{a} to see a trace of the execution of the program, along with the final result of \texttt{42} in the \texttt{Ret} register. Open \texttt{Prim.c} to see the source code for the program: 
+\begin{verbatim}
+#include "rts.h"
+// prototypes
+StgWord main_closure[1];
+StgWord main_info[1];
+CodeLabel main_entry();
+// static closures and info tables
+StgWord main_closure[] = {main_info};
+StgWord main_info[] = {main_entry};
+// code
+CodeLabel main_entry() {
+    printf("main_entry\n");
+    if (SpPtr > SpVal) { stack_overflow(); }
+    StgWord _k = SpVal[1];
+    SpVal += 1;
+    Ret = 42;
+    JUMP(_k);
+}
+\end{verbatim}
+For every global binding, the code generator generates a closure (\texttt{main\_closure} for the \texttt{main} function in \texttt{Prim.stg}), consisting of a pointer to the closure's info table and pointers to all of its free variables. \texttt{main} does not have any free variables, so \texttt{main\_closure} consists of a single pointer to the corresponding info table, \texttt{main\_info}. Don't worry about what info tables are just yet, since they won't become important until the next exercise. For now, info tables will always consist of exactly one pointer to the closure's standard entry code. 
+
+The standard entry code for the closure belonging to \texttt{main} is the creatively-named \texttt{main\_entry}. This is a continuation in the style presented in the theory questions above. The STG-machine's runtime system, defined in \texttt{rts.c} and \texttt{rts.h} will always begin evaluation with \texttt{main\_entry}. The body of the function is obtained by compiling the expression contained in the $\lambda$-form for \texttt{main}. In the case of \texttt{Prim.stg}, the expression belonging to \texttt{main} is just a primitive integer. To illustrate how the code is generated by $\mathit{compExpr}$'s case for primitive integers, you can find an annotated version of \texttt{Prim.c} below, where each line is annotated with the corresponding Haskell source code that generated it:
+\begin{verbatim}
+CodeLabel main_entry() {
+    printf("main_entry\n");
+    if (SpPtr > SpVal) { stack_overflow(); }
+    
+    // -- pop the continuation off the pointer stack
+    // k <- loadLocalFromStack ValStk 0 "_k" (MonoTy $ AlgTy "_Cont")
+    StgWord _k = SpVal[1];
+    
+    // adjustStack ValStk (-1)
+    SpVal += 1;
+    
+    // -- set the return register value
+    // returnVal v
+    Ret = 42;
+    
+    // -- jump to the continuation
+    // jump k
+    JUMP(_k);
+}
+\end{verbatim}
+As described in Appendix \ref{app:stacks}, there are two stacks: the pointer and the value stack. Continuations are stored on the value stack, referred to as $\mathit{ValStk}$ in the Haskell code. A call to $\mathit{adjustStack~s~n}$ for some stack $s$ and some integer $n$ if $n$ is positive indicates that $n$-many items were pushed onto the stack $s$ or that $n$-many items were popped off the stack if $n$ is negative. The $\mathit{adjustStack}$ function will automatically work out whether this should translate into an instruction which increments or decrements the respective stack pointer. In this case, since the value stack grows from higher memory addresses to lower memory addresses, it results in the pointer being incremented as a result of an item getting popped off it. Note that none of the functions which push or pop items off/onto the two stacks, such as $\mathit{loadLocalFromStack}$ will ever adjust the stack pointers themselves! This is so that you can try to group several pushes/pops into a single instruction which adjusts the respective stack pointer.
+
+The $\mathit{loadLocalFromStack}$ function also takes an index into the stack as an argument (set to 0 in the code above), which allows you to index into arbitrary positions in the stacks. A value of $0$ will get translated into the position corresponding to the element at the top of the stack (1 for the value stack and $-1$ for the pointer stack). The final argument of the function is the type of the local. The continuation has no ``real'' type, so we just assign it an arbitrary type which cannot possibly appear in a source program (the leading underscore wouldn't be a valid name in the STG language).
+
+\question Complete the definition of $\mathit{compExpr}$'s case for $\mathit{OpE}$ (just above the one for $\mathit{LitE}$):
+\begin{verbatim}
+compExpr (OpE op [x,y] _) = do
+    -- pop the continuation off the pointer stack
+
+    -- compile the operator application
+
+    -- jump to the continuation
+    undefined
+\end{verbatim}
+This corresponds to Rule 15 of the operational semantics. It should do exactly the same as the case for $\mathit{LitE}$ except, instead of storing the value of a literal in the \texttt{Ret} register, you should call the $\mathit{compBuiltIn}$ function (defined just above $\mathit{compExpr}$) to compile the operator application for you. If successful, the \texttt{example2} program should compile and produce the expected result.
+
+\question Next, we will compile constructor applications. Recall that all evaluation in the STG-machine is performed by \texttt{case}-expressions. For the primitive integers we have dealt with so far, the code generated for a corresponding \texttt{case}-expression pushes a continuation onto the value stack which is then acquired by the code for the primitive and jumped to. (The runtime system in \texttt{rts.c} pretends that \texttt{main} is wrapped into a \texttt{case}-expression on primitive integers by pushing the \texttt{finished} continuation onto the value stack before evaluating \texttt{main}.) The continuation can then decide what to do based on the value in the \texttt{Ret} register.
+
+For constructors, things get a bit more tricky. A corresponding \texttt{case}-expression will push a pointer to a vector of continuations -- one for each constructor belonging to a given type -- onto the value stack. The code generated for a constructor must pop this pointer off the value stack and then choose the appropriate continuation to jump to. The relevant skeleton code is shown below:
+\begin{verbatim}
+compExpr (CtrE c as _) = do
+    -- obtain the return vector from the value stack
+    undefined
+
+    -- allocate a closure for the arguments
+    unless (null as) $ do
+        -- allocate enough memory for all of the constructor's arguments and
+        -- a pointer to the constructor's info table
+        -- NOTE: the info table bit is not implemented, since it is slightly
+        --       tricky -- see the note in the definition of `compAlgDefault'
+        undefined
+
+        -- set the node register to the right location
+        withVar "_c" $ \sym -> writeRegister NodeR sym
+
+    -- look up the index of the constructor and jump to the
+    -- corresponding entry in the return vector
+    r <- lift $ lift $ lookupCtrIndex c
+
+    case r of
+        Nothing  -> error "Internal error: constructor not found"
+        (Just i) -> jump (IndexSym (RegisterSym RetVecR) i)
+\end{verbatim}
+\begin{parts}
+\part There are two \texttt{undefined}s here. Let's tackle the first one: obtain the return vector from the value stack. There is a special register for return vectors, named \texttt{RetVec} in the C code and $\mathit{RetVecR}$ in Haskell. There is also a $\mathit{loadRegisterFromStack}$ function of type $\mathit{Register} \to \mathit{Stack} \to \mathit{Int} \to \mathit{CodeGenFn}~()$ which loads a value at some index from some stack and stores it in some register. Replace the first \texttt{undefined} with an appropriate call to $\mathit{loadRegisterFromStack}$. Don't forget to also adjust the stack afterwards.
+\part Consider the following, slightly silly, program in the STG language:
+\begin{verbatim}
+case Cons {x,xs} of
+    Cons {y,ys} -> y {};
+    Nil {} -> ...
+    default -> ...
+\end{verbatim}
+This \texttt{case}-expression will push the pointer to a return vector with two entries onto the value stack. Assuming that we have defined \texttt{type List {a} = Nil | Cons a (List a)}, then the first entry in the return vector will be for the \texttt{Nil} case and the second entry for the \texttt{Cons} case. No entry in this return vector will point to the \texttt{default} case, since all cases are covered. The code generated for \texttt{Cons \{x,xs\}} will therefore pick the second entry in the return vector and jump to it, but how does that continuation find \texttt{x} and \texttt{xs}? The answer is: we must allocate some memory on the heap (see Appendix \ref{app:heap}) for a closure whose free variables point to the constructor's arguments. For simplicity, we won't set the info table pointer to anything. Replace the second \texttt{undefined} in the skeleton code to do this. There are two functions which will help you:
+\begin{itemize}
+\item $\mathit{allocMemory}$ generates code which will allocate some memory on the heap. The first argument is a $\mathit{String}$ which gives a name to the resulting region of memory during code generation. You should set this to \texttt{"\_c"}, because that's what the subsequent $\mathit{withVar}$ function expects. The second argument is the amount of memory to allocate in words. Remember to allocate enough space for a pointer to the info table (which we won't set to anything) and all of the constructor's arguments (in scope as $\mathit{as}$). $\mathit{allocHeap}$ is the rough equivalent of $\mathit{adjustStack}$ for the heap; the resulting code will only adjust the heap pointer, \texttt{Hp}.
+\item $\mathit{storeAtomsOnHeap}$ generates code which stores a list of atoms on the heap. The first argument, $n$, indicates the negative offset, relative to the heap pointer, at which the function should start storing arguments. Since the heap grows from lower to higher memory addresses and $\mathit{allocMemory}$ increments the heap pointer by the amount of memory requested, subsequent instructions which store things on the heap must subtract from the heap pointer. For example
+\begin{verbatim}
+allocMemory "_foo" 2
+storeAtomsOnHeap 2 [LitAtom (MkPrimInt 23),LitAtom (MkPrimInt 42)]
+\end{verbatim}
+will generate code which first increments \texttt{Hp} by two and refers to the previous location pointed to by \texttt{Hp} as \texttt{\_foo}
+\begin{center}
+\begin{drawstack}
+  \cell{} \cellptr{\texttt{\_foo}}
+  \cell{}
+  \cell{} \cellptr{\texttt{Hp}}
+\end{drawstack}
+\end{center}
+and then stores the two literal atoms on the heap as follows:
+\begin{center}
+\begin{drawstack}
+  \cell{23} \cellptr{\texttt{\_foo}}
+  \cell{42}
+  \cell{} \cellptr{\texttt{Hp}}
+\end{drawstack}
+\end{center}
+\end{itemize}
+\end{parts}
+
+\question Function application is compiled by pushing all arguments onto the respective stacks and then entering the closure represented by the function:
+\begin{verbatim}
+compExpr (AppE f as _) = do
+    -- push arguments onto the appropriate stacks and adjust the stack
+    -- pointers accordingly
+    undefined
+
+    -- enter the closure pointed to by f
+    withVar (varName f) $ \sym -> compEnter sym
+\end{verbatim}
+Replace the \texttt{undefined} in the case for $\mathit{AppE}$ with statements which generate C code to push the function's arguments onto the respective stacks. The $\mathit{pushArgs}$ function (defined in \texttt{CodeGen.hs}) can do most of the work for you. It takes two arguments: a pair of offsets into the value and pointer stacks, and a list of atoms to push onto the stacks. The function will work out which stack each atom needs to be pushed onto and it will return the final offsets as a pair. So, if you start at the top of each stack (offsets $(0,0)$), then you would get back a pair telling you how many items were pushed onto each stack. The first section of the pair corresponds to the value stack and the second to the pointer stack.
+
+\question The opposite code, which pops the arguments off the stacks, needs to go into the definition of $\mathit{standardEntry}$ (in \texttt{CodeGen.hs}, shortened):
+\begin{verbatim}
+-- | `standardEntry lf' generates the standard entry code for `lf'
+standardEntry :: ALambdaForm PolyType -> CodeGenFn ()
+standardEntry (MkLambdaForm fvs uf vs e) = do
+    -- some other code you don't need to worry about
+    
+    -- for simplicity, we pop all arguments off the stack here
+    -- a more efficient implementation might leave them on the stack
+    -- if possible
+    -- YOUR CODE HERE
+
+    -- compile the expression
+    compExpr e
+\end{verbatim}
+There is a function called $\mathit{loadArgs}$ which does the opposite of $\mathit{pushArgs}$. It generates code to pop items off the two stacks, starting from the tops of the stacks if the initial offsets are $(0,0)$, until it has done so for every variable in the list that it is given. \emph{Hint}: since it starts the top of the stacks, the arguments will be popped in reverse order compared to the order in which they were pushed onto the stacks. You will need to account for that either here or in your code for $\mathit{AppE}$. Once done, \texttt{example3} should produce the right result.
+
+\question Similarly, the $\mathit{compAlgAltCont}$ function generates the entry code for an algebraic case alternative -- \emph{i.e.} a continuation in a return vector. Remember how you stored a constructor's arguments on the heap? You need to load them from the heap here:
+\begin{verbatim}
+-- | `compAlgAltCont alt' generates code for an algebraic alternative.
+compAlgAltCont :: LocalEnv -> AAlgAlt PolyType -> CodeGenFn ()
+compAlgAltCont env (AAlt c vs e t) = do
+    restoreEnvironment env
+
+    -- pattern variables will be on the heap
+    -- YOUR CODE HERE
+
+    -- generate the code for the expression
+    compExpr e
+\end{verbatim}
+There are two functions which will be helpful here: $\mathit{deallocateMemory}$ and $\mathit{loadHeapArgs}$. Since we know that the constructor's code will have been the last thing that got executed before jumping to the continuation we are generating code for here, we can safely deallocate the memory used by the arguments. $\mathit{deallocateMemory}~n$ deallocates $n$ words on the heap. $\mathit{loadHeapArgs}~i~\mathit{vs}$ loads values from the heap and dumps them into local variables, starting at \texttt{Hp}+$i$, for all variables in $\mathit{vs}$. So, if you call $\mathit{deallocateMemory}$ first with the size of the closure, \texttt{Hp} will point at the non-existant info pointer and the first argument will be at offset $1$. Once implemented, \texttt{example4} should work.
+
+\question Finally, in order to get \texttt{example5} to work, you must finish the definition of $\mathit{allocClosures}$ which generates the code for local bindings. Specifically, you need to fill in the code which allocates heap memory for a closure and stores the info pointer as well as the free variables on the heap:
+\begin{verbatim}
+-- | `allocClosures bs' allocates dynamic closures on the STG heap for all
+--   bindings in `bs'
+allocClosures :: [ABind PolyType] -> CodeGenFn ()
+allocClosures [] = return ()
+allocClosures (MkBind (Var n _) lf t : bs) = do
+    -- generate the standard entry code for the closure
+    entry <- lift $ lift $
+        withNewFunction (n ++ "_entry_") (standardEntry lf)
+
+    -- generate an info table on the C heap
+    tbl <- lift $ lift $ infoTbl n entry
+
+    -- calculate the size of the closure for this binding and allocate memory
+    -- on the STG heap and refer to it as `n'
+    let
+        s = closureSize lf
+
+    -- YOUR CODE HERE
+
+    -- continue with the other bindings
+    allocClosures bs
+\end{verbatim}
+In addition to function(s) which you may have encountered for previous questions, you will also need:
+\begin{itemize}
+\item $\mathit{writeHeap}$ generates code to write something of type $\mathit{Symbol}~a$ to a location on the heap (such as the info table, $\mathit{tbl}$).
+\item $\mathit{storeVarsOnHeap}$ generates code to store variables on the heap, similarly to $\mathit{storeAtomsOnHeap}$.
+\end{itemize}
+
+\question The test cases in the \texttt{/tests/codegen/} folder are likely not exhaustive. Try to come up with your own test cases which increase the test coverage \textbf{and} submit them as pull requests to the \url{https://github.com/mbg/compconstr-code} repository. You should keep an eye out for any new test cases that appear there, as well. Does your code generator pass them? Bonus points if you find a test case which breaks my model implementation. Note that there are some things which have been omitted from the code generator to keep things relatively simple:
+\begin{itemize}
+\item Updatable closures are treated as not-updatable. No code related to updates is generated.
+\item Default case alternatives for algebraic types, which bind a variable, are not implemented to keep you sane. 
+\item Some stack / heap checks are not implemented (this will likely be addressed in the upcoming supervision work).
+\end{itemize}
+\end{questions}
+
+\newpage
+\appendix
+\section{Appendix}
+
+\input{appendices/typed-syntax.tex} \pagebreak
+\input{appendices/semantics.tex}
+\input{appendices/runtime.tex}
+
+\end{document}

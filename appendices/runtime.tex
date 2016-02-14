@@ -1,0 +1,34 @@
+\subsection{Runtime}
+\label{app:runtime}
+
+\subsubsection{Heap}
+\label{app:heap}
+
+We are making use of C's heap to store static closures and info tables. For dynamic closures, we use our own heap. The heap pointer, \texttt{Hp}, points at the first free location in our heap. The heap is simply an array and grows from lower to higher memory addresses.
+
+\subsubsection{Stacks}
+\label{app:stacks}
+
+The STG-machine's three stacks can be merged into a single stack at runtime. However, for reasons which will become apparent in the final supervision, we split that resulting stack into two new stacks: a value stack and a pointer stack. The pointer stack contains only pointers to closures and the value stack contains primitive values, pointers to continuations, and so on. To save memory at runtime, both stacks will occupy the same region in memory. The initial memory layout of the stacks is shown in \autoref{fig:stacklayout}. The pointer stack grows from lower to higher memory addresses and the value stack grows from lower to higher memory addresses. 
+
+Initially, the pointer stack is completely empty. The pointer stack pointer, \texttt{SpPtr}, points to the memory address at which the stacks are located. The value stack contains a single item: a pointer to a continuation, \texttt{finished} (defined in \texttt{cbits/rts.c}), which, when invoked, terminates the program. The value stack pointer, \texttt{SpVal}, points to the next available slot. Both stack pointers should point to the next available slot after a push or pop. We can detect a stack overflow by checking whether \texttt{SpPtr} is greater than \texttt{SpVal} or vice-versa.
+
+\begin{figure}
+\begin{center}
+\begin{drawstack}
+  % Within the environment, draw stack elements with \cell{...}
+  \cell{\texttt{}} \cellptr{\texttt{SpPtr} and \texttt{Stack}}
+  \padding{3}{$\vdots$}
+  \cell{} \cellptr{\texttt{SpVal}}
+  \cell{\texttt{finished}} 
+\end{drawstack}
+\caption{Initial stack layout}
+\label{fig:stacklayout}
+\end{center}
+\end{figure}
+
+
+\subsubsection{Registers}
+\label{app:registers}
+
+Aside from the heap pointer, \texttt{Hp}, and the two stack pointers, \texttt{SpPtr} and \texttt{SpVal}, there are three other registers: the \texttt{Ret} register stores the primitive integer of the last $\mathit{ReturnInt}$ state, the \texttt{RetVec} register stores the pointer to the last return vector, and the \texttt{Node} register stores the memory address of the closure that was last entered. All registers are implemented as global variables in C (in \texttt{cbits/rts.h}).

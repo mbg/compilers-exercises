@@ -1,0 +1,38 @@
+\subsection{STG Language}
+
+\begin{figure}[h]
+\begin{mdframed}
+    \begin{displaymath}
+    \begin{array}{llcll}
+    \multicolumn{5}{c}{\begin{array}{cc}
+    \mathit{var} \in \texttt{[a-z][a-zA-Z0-9]*} & \mathit{ctr} \in \texttt{[A-Z][a-zA-Z0-9]*}
+    \end{array}}\\\\
+    \text{\bl{Program}} & \mathit{prog} & \bl{\to} & \mathit{binds} \\
+    \text{\bl{Bindings}} & \mathit{binds} & \bl{\to} & \mathit{var}_1 \terminal{ = } \mathit{lf}_1\terminal{;} \ldots \terminal{;} \mathit{var}_n \terminal{ = } \mathit{lf}_n\terminal{;} & \bl{n \ge 1}\\
+    \text{\bl{$\lambda$-forms}} & \mathit{lf} & \bl{\to} & \mathit{vars}_f~\terminal{\textbackslash} \pi~\mathit{vars}_a \terminal{ -> } \mathit{expr} \\
+    \text{\bl{Update flag}} & \pi & \bl{\to} & \terminal{u} & \text{\bl{Updatable}} \\
+    &     & \bl{\mid}     & \terminal{n} & \text{\bl{Not updatable}} \\
+    \text{\bl{Expression}} & \mathit{expr} & \bl{\to}  & \terminal{let}~\mathit{binds}~\terminal{in}~\mathit{expr} & \text{\bl{Local definition}} \\
+    &               & \bl{\mid} & \terminal{letrec}~\mathit{binds}~\terminal{in}~\mathit{expr} & \text{\bl{Local recursion}} \\
+    &               & \bl{\mid} & \terminal{case}~\mathit{expr}~\terminal{of}~\mathit{alts} & \text{\bl{Case expression}} \\
+    &               & \bl{\mid} & \mathit{var}~\mathit{atoms} & \text{\bl{Application}} \\
+    &               & \bl{\mid} & \mathit{constr}~\mathit{atoms} & \text{\bl{Saturated constructor}} \\
+    &               & \bl{\mid} & \mathit{prim}~\mathit{atoms} & \text{\bl{Saturated built-in operator}} \\
+    &               & \bl{\mid} & \mathit{literal}  \\
+    \text{\bl{Alternatives}} & \mathit{alts} & \bl{\to}  & \mathit{aalt}_1 \terminal{;} \ldots \terminal{;} \mathit{aalt}_n \terminal{;} \mathit{default} & \bl{n \ge 0} \text{ \bl{(Algebraic)}} \\
+    &               & \bl{\mid} & \mathit{palt}_1 \terminal{;} \ldots \terminal{;} \mathit{palt}_n \terminal{;} \mathit{default} & \bl{n \ge 0} \text{ \bl{(Primitive)}} \\
+    \text{\bl{Algebraic alt}} & \mathit{aalt} & \bl{\to}  & \mathit{constr}~\mathit{vars}~\terminal{->}~\mathit{expr} \\
+    \text{\bl{Primitive alt}} & \mathit{palt} & \bl{\to}  & \mathit{literal}~\terminal{->}~\mathit{expr} \\
+    \text{\bl{Default alt}} & \mathit{default} & \bl{\to}  & \mathit{var}~\terminal{->}~\mathit{expr} \\
+    &                  & \bl{\mid} & \terminal{default ->}~\mathit{expr}\\
+    \text{\bl{Literals}} & \mathit{literal} & \bl{\to}  & \terminal{0\#}~\bl{\mid}~\terminal{1\#}~\bl{\mid}~\ldots & \text{\bl{Primitive integers}}\\
+    \text{\bl{Primitive ops}} & \mathit{prim} & \bl{\to}  & \terminal{+\#}~\bl{\mid}~\terminal{-\#}~\bl{\mid}~\terminal{*\#}~\bl{\mid}~\terminal{/\#}  & \text{\bl{Primitive integer ops}}\\     
+    \text{\bl{Variable lists}} & \mathit{vars} & \bl{\to} & \terminal{\{}~\mathit{var}_1~\terminal{,} \ldots \terminal{,}~\mathit{var}_n~\terminal{\}} & \bl{n \ge 0}\\  
+    \text{\bl{Atom lists}} & \mathit{atoms} & \bl{\to} & \terminal{\{}~\mathit{atom}_1~\terminal{,} \ldots \terminal{,}~\mathit{atom}_n~\terminal{\}} & \bl{n \ge 0}\\ 
+    \text{\bl{Atoms}} & \mathit{atom}  & \bl{\to} & \mathit{var} ~\bl{\mid}~ \mathit{literal}            \\                        
+    \end{array}
+    \end{displaymath}
+    \caption{STG language}
+    \label{fig:stglang}
+\end{mdframed}
+\end{figure}

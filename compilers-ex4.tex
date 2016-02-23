@@ -1,0 +1,302 @@
+\documentclass[10pt,a4paper]{exam} % turn it into a class! 
+\usepackage[latin1]{inputenc}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{titlesec}
+\usepackage{hyperref}
+\usepackage{fancyeq}
+\usepackage{tikz}
+%\usepackage{tikz-uml}
+\usepackage{mathpartir}
+\usetikzlibrary{matrix,decorations.pathmorphing,shapes,arrows,backgrounds,positioning}
+\usepackage{graphicx,xcolor}
+\usepackage{geometry}
+\usepackage{everysel}
+\usepackage[normalem]{ulem}
+\usepackage{mdframed}
+\usepackage{drawstack}
+
+\tikzset{
+  treenode/.style = {align=center, inner sep=0pt, text centered,
+    font=\sffamily},
+  arn_n/.style = {treenode, circle, black, font=\sffamily\bfseries, draw=black,
+    fill=white, text width=1.5em},% arbre rouge noir, noeud noir
+  arn_r/.style = {treenode, circle, red, draw=red, 
+    text width=1.5em, very thick},% arbre rouge noir, noeud rouge
+  arn_x/.style = {treenode, rectangle, draw=black,
+    minimum width=0.5em, minimum height=0.5em}% arbre rouge noir, nil
+}
+
+\usepackage[sc]{mathpazo}
+\linespread{1.05}         % Palatino needs more leading (space between lines)
+\usepackage[T1]{fontenc}
+
+% some format settings
+% for hard-bound final submission, use:
+%\setlength{\oddsidemargin}{4.6mm}     % 30 mm left margin - 1 in
+% for soft-bound version and techreport, use instead:
+
+\setlength{\oddsidemargin}{-0.4mm}    % 25 mm left margin - 1 in
+\setlength{\evensidemargin}{\oddsidemargin}
+\setlength{\topmargin}{-5.4mm}        % 20 mm top margin - 1 in
+\setlength{\textwidth}{160mm}         % 20/25 mm right margin
+\setlength{\textheight}{237mm}        % 20 mm bottom margin
+\setlength{\headheight}{5mm}
+\setlength{\headsep}{5mm}
+\setlength{\parindent}{0mm}
+\setlength{\parskip}{\medskipamount}
+\renewcommand\baselinestretch{1.2} % thesis format (not needed for techreport)
+% don't let large figures hijack entire pages
+\renewcommand\topfraction{.9}
+\renewcommand\textfraction{.1}
+\renewcommand\floatpagefraction{.8}
+
+\pagestyle{headandfoot}
+%\pointsinrightmargin
+%\pointname{ marks}
+%\marginpointname{ marks}
+
+\marksnotpoints 
+
+\definecolor{campurple}{HTML}{862D91} 
+\definecolor{campurpledark}{HTML}{2A185C}
+
+\hypersetup{  
+  urlcolor=campurple,
+  linkcolor=campurple,
+  colorlinks=true  
+}
+
+\titlelabel{\llap{\thetitle\quad}}
+
+\newcommand {\lbrac} {\makebox[0pt]{[\kern-1ex[}}
+\newcommand {\rbrac} {\makebox[0pt]{]\kern-1ex]}}
+\newcommand{\denote}[1]{\lbrac~#1~\rbrac}
+
+
+\def\mystrut(#1,#2){\vrule height #1pt depth #2pt width 0pt} 
+
+\titlespacing*{\section}{0pt}{0pt}{0pt}
+
+
+\begin{document}
+
+\newcommand{\course}{Compiler\\[-0.4cm]Construction}
+\newcommand{\week}{IV}
+
+\everymath{\color{campurpledark}}
+\everydisplay{\color{campurpledark}}
+
+%\vspace{15pt}
+
+%\begin{center}
+%\emph{Complete SECTION 1 and ONE other section.}
+%\end{center}
+
+%\begin{center}
+%\emph{Answer SECTION 1 and TWO other sections.}
+%\end{center}
+
+\marksnotpoints
+\pointsdroppedatright
+\marksnotpoints
+\marginpointname{ \points\ worth of words}
+
+\begin{center}
+\LARGE {\textbf{\color{campurpledark} \course} }\\[-0.2cm]
+\Large \color{campurpledark} Supervision \week: Return of the Memory\\
+\end{center}
+
+{\color{campurple}\hrule}
+
+\newcommand{\metavar}[1]{{\color{campurple}#1}}
+
+\vspace{0.5cm}
+
+\newcommand{\terminal}[1]{\texttt{\color{campurple}#1}}
+\newcommand{\bl}[1]{{\color{black}#1}}
+
+%\section*{Introduction}
+
+\begin{center}
+\parbox[c]{340pt}{
+A long time ago in a supervision far, far away... \\
+
+We have constructed a compiler which, given an input program in the STG language, produces C code that corresponds to the operational semantics of the source language.\\
+
+Since then, the evil $\mathbf{let}(\mathbf{rec})$ expressions have greedily been allocating memory on the heap but they never release any when it is no longer needed.\\
+
+In these desperate times of memory shortage, it falls on you to reclaim some of the memory....
+}
+\end{center}
+
+\section*{Exercises}
+
+\begin{questions}
+\question Discuss whether a ``type-aware'' dynamic linker might combat ``DLL hell''.
+\question With the operational semantics / code generator for the STG machine in mind, suggest \emph{at least one} optimisation our compiler could perform. If you are feeling particularly adventurous, try to implement your optimisation(s).
+\question Discuss to what extent (if any) you think that closures are the same as objects. 
+\question An eager student from another university has recently learnt about garbage collectors, but he is annoyed by having to interrupt his program's execution to run garbage collection. He plans to implement a garbage collector which runs continuously on a separate thread. Discuss what issues he might face.
+\question Describe how you would go about constructing a compiler for the STG language in the STG language itself.
+\question A compiler is essentially a translator from one language to another. We say that a compiler is correct if the programs it generates in the target language preserve the meaning of the source programs. Consider the following data type for the abstract syntax of a simple expression language (aka ``Hutton's Razor''):
+\begin{displaymath}
+\begin{array}{lcl}
+\mathbf{data}~\mathit{Expr} & = & \mathit{Val}~\mathit{Int} \mid \mathit{Plus}~\mathit{Expr}~\mathit{Expr}
+\end{array}
+\end{displaymath}
+We give this language a denotational semantics\footnote{There's an entire Part II course on this, woo!} -- that is, one which is defined by mapping terms to objects in some domain -- in the form of a Haskell function:
+\begin{displaymath}
+\begin{array}{lcl}
+\mathit{eval} & :: & \mathit{Expr} \to \mathit{Int} \\
+\mathit{eval}~(\mathit{Val}~n) & = & n \\
+\mathit{eval}~(\mathit{Plus}~e_0~e_1) & = & \mathit{eval}~e_0 + \mathit{eval}~e_1
+\end{array}
+\end{displaymath}
+We now want to compile this language to a stack-based machine with the following instruction set:
+\begin{displaymath}
+\begin{array}{lcl}
+\mathbf{data}~\mathit{Instr} & = & \mathit{ADD} \mid \mathit{PUSH}~\mathit{Int}
+\end{array}
+\end{displaymath}
+Programs for this machine are lists of instructions:
+\begin{displaymath}
+\begin{array}{lcl}
+\mathbf{type}~\mathit{Program} & = & \hslist{\mathit{Instr}}
+\end{array}
+\end{displaymath}
+Stacks are represented as lists of integers. The semantics of the machine are then as follows:
+\begin{displaymath}
+\begin{array}{llcl}
+\mathit{exec} && :: & \mathit{Program} \to \hslist{Int} \to \mathit{Maybe}~\hslist{Int} \\
+\mathit{exec}~\hslist{} & s & = & \mathit{Just}~s \\
+\mathit{exec}~(\mathit{ADD} : p) & (y:x:s) & = &\mathit{exec}~p~((x+y):s) \\
+\mathit{exec}~(\mathit{ADD} : p) & s & = & \mathit{Nothing} \\
+\mathit{exec}~(\mathit{PUSH}~n:p) & s & = & \mathit{exec}~p~(n:s)
+\end{array}
+\end{displaymath}
+Finally, we define a compilation function which turns $\mathit{Expr}$ values into $\mathit{Program}$ values:
+\begin{displaymath}
+\begin{array}{lcl}
+\mathit{comp} & :: & \mathit{Expr} \to \mathit{Program} \\
+\mathit{comp}~(\mathit{Val}~n) & = & \hslist{\mathit{PUSH}~n} \\
+\mathit{comp}~(\mathit{Plus}~e_0~e_1) & = & \mathit{comp}~e_0 \append \mathit{comp}~e_1 \append \hslist{\mathit{ADD}}
+\end{array}
+\end{displaymath}
+Prove that the correctness property holds for this compiler by structural induction on $e$ (optionally, by using a proof assistant of your choice):
+\begin{displaymath}
+\begin{array}{llcl}
+\forall e :: \mathit{Expr}.\forall s :: \hslist{Int}. \qquad & \mathit{Just}~\hslist{\mathit{eval}~e} & = & \mathit{exec}~(\mathit{comp}~e)
+\end{array}
+\end{displaymath}
+
+
+\end{questions}
+
+\section*{Practical Exercises}
+
+For the practical exercises, we will implement a copying garbage collector for the STG language.
+
+\begin{mdframed}
+\textbf{Skeleton Code}\\
+The skeleton code has been updated for this exercise. It is available as the \texttt{supervision4} branch on the \texttt{mbg/compconstr-code} repository. Note that the \texttt{supervision4} branch \textbf{does not} include answers to the previous exercises.
+
+If you have forked the repository to your own GitHub account, you should first bring your fork up-to-date:
+\begin{verbatim}
+$ git remote add upstream https://github.com/mbg/compconstr-code
+$ git fetch upstream
+\end{verbatim}
+At this point, you should ensure that you are on your own \texttt{master} branch:
+\begin{verbatim}
+$ git checkout master
+\end{verbatim}
+Next, merge the (potentially) updated \texttt{upstream/supervision3} branch into your own:
+\begin{verbatim}
+$ git merge upstream/supervision3
+\end{verbatim}
+In theory, you should not encounter any merge errors at this point. If you do, you will have to fix and commit them before proceeding.
+
+Next, you should merge the \texttt{upstream/supervision4} branch into your own:
+\begin{verbatim}
+$ git pull
+$ git merge supervision4
+\end{verbatim}
+Again, you should not encounter any merge errors, but if there are any, fix and commit them before proceeding.
+
+There are no new dependencies, but the package configuration has changed, so just run the following command to reconfigure it:
+\begin{verbatim}
+$ cabal configure
+\end{verbatim}
+Verify that the program compiles successfully (repeat this step whenever you wish to re-compile the compiler):
+\begin{verbatim}
+$ cabal build
+\end{verbatim}
+Some functions in the $\mathit{AbstractC}$ module, such as $\mathit{allocMemory}$, are now parametrised by the type of value they work on. You should be largely unaffected by this, but there may be cases where you have to pass an extra argument to them. It should be OK to use any $\mathit{PolyType}$ values which may be floating around in the scope. For example, in the $\mathit{compExpr}$ case for constructor application, just use $t$ as an extra argument to $\mathit{allocMemory}$. If there is nothing in scope, just make one up such as we did before with $\mathit{MonoTy}~\$~\mathit{AlgTy}~\texttt{"\_Cont"}$ to ``type'' continuations in the code generator.
+
+Once the program compiles successfully, this should create an executable in the \texttt{./dist/build/stg/} directory. A new test program has been added to the \texttt{tests/gc/} folder. You can compile it in the usual way:
+\begin{verbatim}
+$ cd /tests/gc/
+$ make
+\end{verbatim} 
+This test program should happily compile, but it will soon blow up if run (it should cause a crash / infinite loop / who knows).  
+\end{mdframed}
+
+\begin{questions}
+\question In \texttt{src/CodeGenAnalysis.hs}, complete the definitions of $\mathit{heapCost}$ which, given nodes in the abstract syntax tree, should calculate how much heap space in words will be allocated by the code that is generated for the node. The resulting number of words, $n$, will be used by the heap overflow check in a closure's standard entry code to verify that adding $n$ to the heap pointer, \texttt{Hp}, will not result in a heap overflow. There are a few things you may want to consider when you implement this function:
+\begin{itemize}
+\item $\mathbf{let}(\mathbf{rec})$ expressions and constructor applications may allocate memory on the heap (see respective cases in the $\mathit{compExpr}$ function in \texttt{src/CodeGen.hs}). Algebraic case alternatives may deallocate memory (see $\mathit{compAlgAltCont}$), but default alternatives for an algebraic case expression leak memory in this implementation (see $\mathit{compAlgDefault}$). 
+\item The heap overflow check should only check that there is enough space on the heap for the allocations which the code for the current closure is going to make. You should not account for the space needed by other closures which may be entered in the process of evaluating the current one.
+\item If the body of a $\lambda$-form contains a $\mathbf{case}$ expression, then only one of its alternatives will be evaluated, but you cannot predict which. 
+\end{itemize}
+\question Before we can implement the garbage collector, there is a tiny, little problem: the free variables of dynamic closures on the STG heap may either be pointers to other closures or primitive integers. In other words, when the garbage collector discovers a closure, it will not be able to decide whether it should treat a free variable as a pointer to another closure that needs to be explored or a primitive value which can be ignored.
+
+To circumvent this problem, we finally put the info tables we generated for the previous exercise to use. Currently, info tables are generated for every closure and only contain a pointer to the closure's standard entry code. We will now extend them with two additional pointers: one to a closure's \emph{evacuation} code and one to a closure's \emph{scavenging} code. These functions are generated for each closure, so that the generated code will be aware of which free variables are pointers and which are not.
+\begin{parts}
+
+\part The evacuation code of a closure is responsible for copying the closure from the current heap (the ``from-space'') to the other heap (the ``to-space''), then overwriting the closure in the from-space with a \emph{forwarding pointer}, and finally returning the memory address of the closure in the to-space. The forwarding pointer is used to mark a closure as ``copied''. If the garbage collector encounters it again, then the evacuation code for the forwarding pointer will simply return the address of the closure in to-space, instead of copying the closure again.
+
+The corresponding function for this in the code generator is $\mathit{compEvac}$ (at the bottom of \texttt{src/CodeGen.hs}). Complete the implementation of this function. Some hints:
+\begin{itemize}
+\item When the evacuation code is called, the \texttt{Node} register will point to the closure in from-space that should be copied to to-space. The heap pointer register, \texttt{Hp}, will point to the last used location in to-space.
+\item Functions you have encountered in the previous exercise, such as $\mathit{allocMemory}$ and $\mathit{writeHeap}$, can still be used here. Since both generate code which makes use of \texttt{Hp}, both operate on the to-space.
+\item There is no direct way to access the from-space, but since \texttt{Node} still points to a location in from-space, you can index into it. Functions, such as $\mathit{writeHeap}$, which accept a value of type $\mathit{Symbol}~a$ as argument allow you to do this. For example, if you wanted to write the current closure's info pointer to the address pointed at by \texttt{Hp}, you could write:
+\begin{verbatim}
+writeHeap 0 (IndexSym (RegisterSym NodeR) 0 closureTy)
+\end{verbatim}
+The first integer indicates the negative offset to the \texttt{Hp} pointer as in the last exercise. $\mathit{IndexSym}$ allows you to treat another symbol as an array to index into it. The second integer argument to $\mathit{IndexSym}$ indicates the offset into the array.
+\item The $\mathit{withVar}$ function can be used to look up named symbols during code generation such as, for example, those generated by other functions like $\mathit{allocMemory}$. The first argument is the name of the symbol to look up and the second argument is a function which will be given the resolved symbol as an argument. The symbol value cannot leak out of this function.
+\item The $\mathit{writeRegisterIx}$ function allows you to treat a register as an array.
+\item $\mathit{forwardPtrTbl}$ is a $\mathit{Symbol}~\mathit{InfoTbl}$ which represents the info table for the forwarding pointer.
+\item $\mathit{returnSymbol}$ may be used to generate a \texttt{return} statement in C.
+\item If you ever need to express ``do nothing'', then $\mathit{return}~()$ might be for you.
+\end{itemize} 
+
+\part For each pointer in the free variables of a closure, the scavenging code calls the evacuation code for the pointer, then replaces it with the address of the new closure in to-space which is returned by the evacuation code, and finally calls the scavenging code. The corresponding function for this in the code generator is $\mathit{compScavenge}$ (at the bottom of \texttt{src/CodeGen.hs}). Complete the implementation of this function. Some hints:
+\begin{itemize}
+\item The scavenging code calls the evacuation and scavenging procedures of other closures, which expect the \texttt{Node} register to be set to their corresponding closures. This is a problem, because the scavenging code itself needs to remember which closure it belongs to. To circumvent this problem, you may want to back up the \texttt{Node} register into a local variable on entry, using \emph{e.g.} the $\mathit{loadLocalFromRegister}$ function. The $\mathit{Symbol}$ corresponding to the local variable is returned by the function.
+\item The $\mathit{isPrimitive}$ function can be used to test if a type is primitive -- \emph{i.e.} not a pointer.
+\item The $\mathit{callEvac}$ function will handle most of the work involved in calling another closure's evacuation code for you. It expects a symbol and an index as arguments. The symbol should be your backed-up version of \texttt{Node} and the index should be the index of the free variable which points to the other closure (1 for the first free variable, and so on).
+\item The $\mathit{callScav}$ function will call the scavenging code of another closure. It expects the same arguments as the $\mathit{callEvac}$ function.
+\end{itemize}
+\end{parts}
+
+\question The \texttt{run\_gc} procedure in \texttt{cbits/rts.c} will be invoked whenever the generated code detects that there is not enough space available on the heap. That is, when the heap overflow check fails. Modify \texttt{run\_gc} to contain your garbage collector. The rough algorithm for this as follows:
+\begin{itemize}
+\item If the active heap is \texttt{HeapA} (\texttt{Heap == HeapA}), switch to \texttt{HeapB} and vice-versa. You also need to update \texttt{Hp} to point at the start of the new heap and \texttt{HLimit} to point at the end.
+\item Using the pointer stack as the root set, call the evacuation code followed by the scavenging code for each closure and update the entry in the pointer stack with the new address.
+\item Call the evacuation code followed by the scavenging code for the closure pointed to by \texttt{Node} and update \texttt{Node} with the result of the evacuation.
+\item Enter \texttt{Node} to continue execution of the program.
+\end{itemize}
+\end{questions}
+Congratulations! If you have made it this far, you now have a relatively functional implementation of the STG machine that could be used as the target for a call-by-need functional language if you ever wanted to make one. 
+
+\newpage
+\appendix
+\section{Appendix}
+
+\input{appendices/typed-syntax.tex} \pagebreak
+\input{appendices/semantics.tex}
+\input{appendices/runtime.tex}
+
+\end{document}

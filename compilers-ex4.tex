@@ -187,7 +187,7 @@ Finally, we define a compilation function which turns $\mathit{Expr}$ values int
 Prove that the correctness property holds for this compiler by structural induction on $e$ (optionally, by using a proof assistant of your choice):
 \begin{displaymath}
 \begin{array}{llcl}
-\forall e :: \mathit{Expr}.\forall s :: \hslist{Int}. \qquad & \mathit{Just}~\hslist{\mathit{eval}~e} & = & \mathit{exec}~(\mathit{comp}~e)
+\forall e :: \mathit{Expr}.\forall s :: \hslist{Int}. \qquad & \mathit{Just}~(\mathit{eval}~e : s) & = & \mathit{exec}~(\mathit{comp}~e)~s
 \end{array}
 \end{displaymath}
 

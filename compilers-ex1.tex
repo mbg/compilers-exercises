@@ -106,7 +106,7 @@
 
 \begin{center}
 \LARGE {\textbf{\color{campurpledark} \course} }\\[-0.2cm]
-\Large \color{campurpledark} Supervision \week: The Spineless Tagless G-Machine Awakens\\
+\Large \color{campurpledark} Supervision \week: The Front End\\
 \end{center}
 
 {\color{campurple}\hrule}
@@ -306,102 +306,5 @@ Explain how lookahead addresses this problem.
 \end{parts}
 
 \end{questions}
-
-\section*{Practical Exercises}
-
-For the practical exercises, we will implement a compiler from the STG language (shown in \autoref{fig:stglang}) to C. You may use a programming language of your choice, but note that skeleton code is available in Haskell (and will save you much of the work). 
-
-\begin{mdframed}
-\textbf{Skeleton Code}\\
-You can obtain a copy of the skeleton code by cloning the following repository on GitHub (you may wish to create a fork on your own account instead of cloning it directly if you wish to submit a link to your repository as your answer):
-\begin{verbatim}
-$ git clone https://github.com/mbg/compconstr-code
-\end{verbatim}
-If you have not used Haskell before, download and install the latest version of the Haskell Platform from \url{https://www.haskell.org/platform/}. Once installed, navigate to the directory containing the skeleton code, set up a Cabal sandbox, and install the dependencies:
-\begin{verbatim}
-$ cd compconstr-code
-$ cabal sandbox init
-$ cabal install --only-dependencies
-$ cabal configure
-\end{verbatim}
-Once all dependencies have been installed, verify that the program compiles successfully (repeat this step whenever you wish to re-compile the compiler):
-\begin{verbatim}
-$ cabal build
-\end{verbatim}
-If successful, this should create an executable in the \texttt{./dist/build/stg/} directory. You can invoke the compiler with \emph{e.g.}, although note that this will fail with a parse error until you have completed the exercises below:
-\begin{verbatim}
-$ ./dist/build/stg/stg ./tests/Map.stg
-\end{verbatim} 
-The compiler will attempt to parse all files specified as inputs to the program. If a file can be parsed, the generated abstract syntax tree will be pretty-printed to the standard output. If an error occurs, that error will be displayed instead (which is what happens in this case). It may help you to look at the \texttt{Map.stg} file and the parse error that occurs to figure out what you need to do for the exercises below.
-\end{mdframed}
-
-\begin{questions}
-%\question Abstract machines, typically have an instruction set over which the operational semantics are defined. Programs are sequences of instructions. In our case, the instruction set consists of only $\mathbf{PUSH}$ and $\mathbf{ADD}$. However, as we have noted above, compiling a functional language to such an instruction set is not straight-forward.
-
-%The Spineless Tagless G-Machine\footnote{A full description of this machine may be found in \url{http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.53.3729&rep=rep1&type=pdf} which you may find useful. Only Part II is relevant to this exercise.} was designed as a target machine for non-strict, functional languages (primarily Haskell). Programs for the STG machine are written in the STG language which, unlike most other machine languages, is a functional language which is given an operational semantics. This makes it easy to translate more high-level functional languages into STG programs. Its syntax is shown in \autoref{fig:stglang}. We use a dark purple, italic font ($\mathit{symbol}$) to denote non-terminals, a light purple, typewriter font ($\terminal{terminal}$) to denote terminals, and a regular black font for everything else. Sequences are denoted using $\ldots$ and numbered symbols.
-
-\question Identify the terminal symbols in the context-free grammar for the concrete syntax of the STG language (\autoref{fig:stglang}). The first stage of a compiler typically reads source files (plain text) and converts them into lists of lexical tokens. Tokens typically correspond to the terminal symbols in the context-free grammar of a language. In a programming language of your choice, implement a representation of lexical tokens for the STG language. If you are using the skeleton code, a corresponding type has already been defined in \texttt{src/Token.hs}. However, one or more token types have been omitted -- add them as new data constructors to the $\mathit{Token}$ type. You will also have to extend the definition of the $\mathit{pp}$ function at the bottom of the file with corresponding cases for the token types you have added.
-
-\question Construct a lexer which reads a source file and converts it into a list of tokens. If you are using the skeleton code, the lexer is specified in the \texttt{src/Lexer.x} file. We are using a lexer generator named \emph{Alex} for this purpose\footnote{You can find the documentation for Alex at \url{https://www.haskell.org/alex/doc/html/}}. The specification largely consists of regular expressions and semantic actions (in Haskell) which are invoked when a regular expression matches the input. For example,
-\begin{verbatim}
-"letrec"                    { makeToken TLetRec                         }
-\end{verbatim}
-tries to exactly match the string \texttt{letrec} and constructs a $\mathit{TLetRec}$ token if successful. You should add rules for the token types you added for the previous question.
-\question \autoref{fig:stglang} shows the context-free grammar for the concrete syntax of the STG language. Design a corresponding grammar for the abstract syntax of the language and implement it in a language of your choice. If you are using the skeleton code, you may find the code in \texttt{src/AST.hs}. There are some data type constructors missing, however, and you will need to add them. Don't forget to also add corresponding cases to the definitions of the $\mathit{pp}$ function at the bottom of the file.
-
-\question In a language of your choice, implement a parser for the STG language. The parser should take a list of tokens as input and produce an abstract syntax tree if possible or an error if not. If you're using the skeleton code, the parser is specified in \texttt{src/Parser.y}. Here we are using a parser generator named \emph{Happy}\footnote{You can find the documentation for Happy at \url{https://www.haskell.org/happy/doc/html/}}. The specification consists of non-terminal symbols, productions, and semantic actions. For example,
-\begin{verbatim}
-default :: { DefaultAlt }
-default : VAR '->' expr              {% mkDefaultVar $1 $3                  }
-        | DEFAULT '->' expr          {% mkDefault $1 $3                     }
-\end{verbatim}
-defines a non-terminal named \texttt{default} whose semantic actions return a value of type $\mathit{DefaultAlt}$. The non-terminal has two productions and corresponding semantic actions -- note that the functions used in the semantic actions are defined in \texttt{src/P.hs}. The productions make use of another non-terminal, \texttt{expr}, which is defined elsewhere in \texttt{src/Parser.y}, and two terminals. All terminals are declared at the top of the file. For example,
-\begin{verbatim}
-DEFAULT                          { (TDefault, $$)                       }
-\end{verbatim}
-maps the \texttt{DEFAULT} terminal to a token identified by $\mathit{TDefault}$ and gives it its position in the source file as value (the \texttt{\$\$} part). Add productions for the constructors you added for the previous question, as well as terminals for the token types you added for the first practical question. For the semantic actions, corresponding function stubs exist in \texttt{src/P.hs} -- complete them by replacing $\mathit{undefined}$.
-
-\question Thoroughly test your parser to ensure that all valid programs in the STG language, according to the grammar in \autoref{fig:stglang}, can be parsed successfully. Explain how you have tested your parser and why you are convinced that it is correct.
-\end{questions}
-
-\newpage
-\section*{Appendix}
-
-\begin{figure}[h]
-\begin{mdframed}
-    \begin{displaymath}
-    \begin{array}{llcll}
-    \multicolumn{5}{c}{\begin{array}{cc}
-    \mathit{var} \in \texttt{[a-z][a-zA-Z0-9]*} & \mathit{ctr} \in \texttt{[A-Z][a-zA-Z0-9]*}
-    \end{array}}\\\\
-    \text{\bl{Program}} & \mathit{prog} & \bl{\to} & \mathit{binds} \\
-    \text{\bl{Bindings}} & \mathit{binds} & \bl{\to} & \mathit{var}_1 \terminal{ = } \mathit{lf}_1\terminal{;} \ldots \terminal{;} \mathit{var}_n \terminal{ = } \mathit{lf}_n\terminal{;} & \bl{n \ge 1}\\
-    \text{\bl{$\lambda$-forms}} & \mathit{lf} & \bl{\to} & \mathit{vars}_f~\terminal{\textbackslash} \pi~\mathit{vars}_a \terminal{ -> } \mathit{expr} \\
-    \text{\bl{Update flag}} & \pi & \bl{\to} & \terminal{u} & \text{\bl{Updatable}} \\
-    &     & \bl{\mid}     & \terminal{n} & \text{\bl{Not updatable}} \\
-    \text{\bl{Expression}} & \mathit{expr} & \bl{\to}  & \terminal{let}~\mathit{binds}~\terminal{in}~\mathit{expr} & \text{\bl{Local definition}} \\
-    &               & \bl{\mid} & \terminal{letrec}~\mathit{binds}~\terminal{in}~\mathit{expr} & \text{\bl{Local recursion}} \\
-    &               & \bl{\mid} & \terminal{case}~\mathit{expr}~\terminal{of}~\mathit{alts} & \text{\bl{Case expression}} \\
-    &               & \bl{\mid} & \mathit{var}~\mathit{atoms} & \text{\bl{Application}} \\
-    &               & \bl{\mid} & \mathit{constr}~\mathit{atoms} & \text{\bl{Saturated constructor}} \\
-    &               & \bl{\mid} & \mathit{prim}~\mathit{atoms} & \text{\bl{Saturated built-in operator}} \\
-    &               & \bl{\mid} & \mathit{literal}  \\
-    \text{\bl{Alternatives}} & \mathit{alts} & \bl{\to}  & \mathit{aalt}_1 \terminal{;} \ldots \terminal{;} \mathit{aalt}_n \terminal{;} \mathit{default} & \bl{n \ge 0} \text{ \bl{(Algebraic)}} \\
-    &               & \bl{\mid} & \mathit{palt}_1 \terminal{;} \ldots \terminal{;} \mathit{palt}_n \terminal{;} \mathit{default} & \bl{n \ge 0} \text{ \bl{(Primitive)}} \\
-    \text{\bl{Algebraic alt}} & \mathit{aalt} & \bl{\to}  & \mathit{constr}~\mathit{vars}~\terminal{->}~\mathit{expr} \\
-    \text{\bl{Primitive alt}} & \mathit{palt} & \bl{\to}  & \mathit{literal}~\terminal{->}~\mathit{expr} \\
-    \text{\bl{Default alt}} & \mathit{default} & \bl{\to}  & \mathit{var}~\terminal{->}~\mathit{expr} \\
-    &                  & \bl{\mid} & \terminal{default ->}~\mathit{expr}\\
-    \text{\bl{Literals}} & \mathit{literal} & \bl{\to}  & \terminal{0\#}~\bl{\mid}~\terminal{1\#}~\bl{\mid}~\ldots & \text{\bl{Primitive integers}}\\
-    \text{\bl{Primitive ops}} & \mathit{prim} & \bl{\to}  & \terminal{+\#}~\bl{\mid}~\terminal{-\#}~\bl{\mid}~\terminal{*\#}~\bl{\mid}~\terminal{/\#}  & \text{\bl{Primitive integer ops}}\\     
-    \text{\bl{Variable lists}} & \mathit{vars} & \bl{\to} & \terminal{\{}~\mathit{var}_1~\terminal{,} \ldots \terminal{,}~\mathit{var}_n~\terminal{\}} & \bl{n \ge 0}\\  
-    \text{\bl{Atom lists}} & \mathit{atoms} & \bl{\to} & \terminal{\{}~\mathit{atom}_1~\terminal{,} \ldots \terminal{,}~\mathit{atom}_n~\terminal{\}} & \bl{n \ge 0}\\ 
-    \text{\bl{Atoms}} & \mathit{atom}  & \bl{\to} & \mathit{var} ~\bl{\mid}~ \mathit{literal}            \\                        
-    \end{array}
-    \end{displaymath}
-    \caption{STG language}
-    \label{fig:stglang}
-\end{mdframed}
-\end{figure}
 
 \end{document}

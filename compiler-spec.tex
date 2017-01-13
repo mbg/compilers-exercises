@@ -1,0 +1,159 @@
+\documentclass[10pt,a4paper]{exam} % turn it into a class! 
+\usepackage[latin1]{inputenc}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{titlesec}
+\usepackage{hyperref}
+\usepackage{fancyeq}
+\usepackage{tikz}
+%\usepackage{tikz-uml}
+\usepackage{mathpartir}
+\usetikzlibrary{matrix,decorations.pathmorphing,shapes,arrows,backgrounds,positioning}
+\usepackage{graphicx,xcolor}
+\usepackage{geometry}
+\usepackage{everysel}
+\usepackage[normalem]{ulem}
+\usepackage{mdframed}
+
+\tikzset{
+  treenode/.style = {align=center, inner sep=0pt, text centered,
+    font=\sffamily},
+  arn_n/.style = {treenode, circle, black, font=\sffamily\bfseries, draw=black,
+    fill=white, text width=1.5em},% arbre rouge noir, noeud noir
+  arn_r/.style = {treenode, circle, red, draw=red, 
+    text width=1.5em, very thick},% arbre rouge noir, noeud rouge
+  arn_x/.style = {treenode, rectangle, draw=black,
+    minimum width=0.5em, minimum height=0.5em}% arbre rouge noir, nil
+}
+
+\usepackage[sc]{mathpazo}
+\linespread{1.05}         % Palatino needs more leading (space between lines)
+\usepackage[T1]{fontenc}
+
+% some format settings
+% for hard-bound final submission, use:
+%\setlength{\oddsidemargin}{4.6mm}     % 30 mm left margin - 1 in
+% for soft-bound version and techreport, use instead:
+
+\setlength{\oddsidemargin}{-0.4mm}    % 25 mm left margin - 1 in
+\setlength{\evensidemargin}{\oddsidemargin}
+\setlength{\topmargin}{-5.4mm}        % 20 mm top margin - 1 in
+\setlength{\textwidth}{160mm}         % 20/25 mm right margin
+\setlength{\textheight}{237mm}        % 20 mm bottom margin
+\setlength{\headheight}{5mm}
+\setlength{\headsep}{5mm}
+\setlength{\parindent}{0mm}
+\setlength{\parskip}{\medskipamount}
+\renewcommand\baselinestretch{1.2} % thesis format (not needed for techreport)
+% don't let large figures hijack entire pages
+\renewcommand\topfraction{.9}
+\renewcommand\textfraction{.1}
+\renewcommand\floatpagefraction{.8}
+
+\pagestyle{headandfoot}
+%\pointsinrightmargin
+%\pointname{ marks}
+%\marginpointname{ marks}
+
+\marksnotpoints 
+
+\definecolor{campurple}{HTML}{862D91} 
+\definecolor{campurpledark}{HTML}{2A185C}
+
+\hypersetup{  
+  urlcolor=campurple,
+  linkcolor=campurple,
+  colorlinks=true  
+}
+
+\titlelabel{\llap{\thetitle\quad}}
+
+\newcommand {\lbrac} {\makebox[0pt]{[\kern-1ex[}}
+\newcommand {\rbrac} {\makebox[0pt]{]\kern-1ex]}}
+\newcommand{\denote}[1]{\lbrac~#1~\rbrac}
+
+
+\def\mystrut(#1,#2){\vrule height #1pt depth #2pt width 0pt} 
+
+\titlespacing*{\section}{0pt}{0pt}{0pt}
+
+
+\begin{document}
+
+\newcommand{\course}{Compiler Construction}
+\newcommand{\week}{I}
+%\newcommand{\topics}{Data, Subtyping \& Objects, Semantic Equivalence, and Concurrency}
+
+\everymath{\color{campurpledark}}
+\everydisplay{\color{campurpledark}}
+
+%\vspace{15pt}
+
+%\begin{center}
+%\emph{Complete SECTION 1 and ONE other section.}
+%\end{center}
+
+%\begin{center}
+%\emph{Answer SECTION 1 and TWO other sections.}
+%\end{center}
+
+\marksnotpoints
+\pointsdroppedatright
+\marksnotpoints
+\marginpointname{ \points}
+
+\begin{center}
+\LARGE {\textbf{\color{campurpledark} \course} }\\[-0.2cm]
+\Large \color{campurpledark} Language Specification\\
+\end{center}
+
+{\color{campurple}\hrule}
+
+\newcommand{\metavar}[1]{{\color{campurple}#1}}
+
+\vspace{0.5cm}
+
+\newcommand{\terminal}[1]{\texttt{\color{campurple}#1}}
+\newcommand{\bl}[1]{{\color{black}#1}}
+
+
+\begin{figure}[h]
+\begin{mdframed}
+    \begin{displaymath}
+    \begin{array}{llcll}
+    \multicolumn{5}{c}{\begin{array}{cc}
+    \mathit{var} \in \texttt{[a-z][a-zA-Z0-9]*} & \mathit{ctr} \in \texttt{[A-Z][a-zA-Z0-9]*}
+    \end{array}}\\\\
+    \text{\bl{Program}} & \mathit{prog} & \bl{\to} & \mathit{binds} \\
+    \text{\bl{Bindings}} & \mathit{binds} & \bl{\to} & \mathit{var}_1 \terminal{ = } \mathit{lf}_1\terminal{;} \ldots \terminal{;} \mathit{var}_n \terminal{ = } \mathit{lf}_n\terminal{;} & \bl{n \ge 1}\\
+    \text{\bl{$\lambda$-forms}} & \mathit{lf} & \bl{\to} & \mathit{vars}_f~\terminal{\textbackslash} \pi~\mathit{vars}_a \terminal{ -> } \mathit{expr} \\
+    \text{\bl{Update flag}} & \pi & \bl{\to} & \terminal{u} & \text{\bl{Updatable}} \\
+    &     & \bl{\mid}     & \terminal{n} & \text{\bl{Not updatable}} \\
+    \text{\bl{Expression}} & \mathit{expr} & \bl{\to}  & \terminal{let}~\mathit{binds}~\terminal{in}~\mathit{expr} & \text{\bl{Local definition}} \\
+    &               & \bl{\mid} & \terminal{letrec}~\mathit{binds}~\terminal{in}~\mathit{expr} & \text{\bl{Local recursion}} \\
+    &               & \bl{\mid} & \terminal{case}~\mathit{expr}~\terminal{of}~\mathit{alts} & \text{\bl{Case expression}} \\
+    &               & \bl{\mid} & \mathit{var}~\mathit{atoms} & \text{\bl{Application}} \\
+    &               & \bl{\mid} & \mathit{constr}~\mathit{atoms} & \text{\bl{Saturated constructor}} \\
+    &               & \bl{\mid} & \mathit{prim}~\mathit{atoms} & \text{\bl{Saturated built-in operator}} \\
+    &               & \bl{\mid} & \mathit{literal}  \\
+    \text{\bl{Alternatives}} & \mathit{alts} & \bl{\to}  & \mathit{aalt}_1 \terminal{;} \ldots \terminal{;} \mathit{aalt}_n \terminal{;} \mathit{default} & \bl{n \ge 0} \text{ \bl{(Algebraic)}} \\
+    &               & \bl{\mid} & \mathit{palt}_1 \terminal{;} \ldots \terminal{;} \mathit{palt}_n \terminal{;} \mathit{default} & \bl{n \ge 0} \text{ \bl{(Primitive)}} \\
+    \text{\bl{Algebraic alt}} & \mathit{aalt} & \bl{\to}  & \mathit{constr}~\mathit{vars}~\terminal{->}~\mathit{expr} \\
+    \text{\bl{Primitive alt}} & \mathit{palt} & \bl{\to}  & \mathit{literal}~\terminal{->}~\mathit{expr} \\
+    \text{\bl{Default alt}} & \mathit{default} & \bl{\to}  & \mathit{var}~\terminal{->}~\mathit{expr} \\
+    &                  & \bl{\mid} & \terminal{default ->}~\mathit{expr}\\
+    \text{\bl{Literals}} & \mathit{literal} & \bl{\to}  & \terminal{0\#}~\bl{\mid}~\terminal{1\#}~\bl{\mid}~\ldots & \text{\bl{Primitive integers}}\\
+    \text{\bl{Primitive ops}} & \mathit{prim} & \bl{\to}  & \terminal{+\#}~\bl{\mid}~\terminal{-\#}~\bl{\mid}~\terminal{*\#}~\bl{\mid}~\terminal{/\#}  & \text{\bl{Primitive integer ops}}\\     
+    \text{\bl{Variable lists}} & \mathit{vars} & \bl{\to} & \terminal{\{}~\mathit{var}_1~\terminal{,} \ldots \terminal{,}~\mathit{var}_n~\terminal{\}} & \bl{n \ge 0}\\  
+    \text{\bl{Atom lists}} & \mathit{atoms} & \bl{\to} & \terminal{\{}~\mathit{atom}_1~\terminal{,} \ldots \terminal{,}~\mathit{atom}_n~\terminal{\}} & \bl{n \ge 0}\\ 
+    \text{\bl{Atoms}} & \mathit{atom}  & \bl{\to} & \mathit{var} ~\bl{\mid}~ \mathit{literal}            \\                        
+    \end{array}
+    \end{displaymath}
+    \caption{STG language}
+    \label{fig:stglang}
+\end{mdframed}
+\end{figure}
+
+\end{document}
